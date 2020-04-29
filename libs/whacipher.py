@@ -1,35 +1,36 @@
-#!/usr/bin/python
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from Crypto.Cipher import AES
 import argparse
 import zlib
 import sys
 import os
+#from Crypto.Cipher import AES
+from Cryptodome.Cipher import AES
 
 
 # Define global variable
-version = "1.0"
+version = "1.1"
 output = ""
 
 def banner():
     """ Function Banner """
 
     print("""
-     __      __.__                  .__       .__                  
-    /  \    /  \  |__ _____    ____ |__|_____ |  |__   ___________ 
+     __      __.__                  .__       .__
+    /  \    /  \  |__ _____    ____ |__|_____ |  |__   ___________
     \   \/\/   /  |  \\\\__  \ _/ ___\|  \____ \|  |  \_/ __ \_  __ \\
      \        /|   Y  \/ __ \\\\  \___|  |  |_> >   Y  \  ___/|  | \/
-      \__/\  / |___|  (____  /\___  >__|   __/|___|  /\___  >__|   
-           \/       \/     \/     \/   |__|        \/     \/               
-    ---------- Whatsapp Encryption and Decryption v""" + version + """ ----------
+      \__/\  / |___|  (____  /\___  >__|   __/|___|  /\___  >__|
+           \/       \/     \/     \/   |__|        \/     \/
+    ----------- WhatsApp Encryption and Decryption v""" + version + """ -----------
     """)
 
 
 def help():
     """ Function show help """
 
-    print("""
+    print("""\
     ** Author: Ivan Moreno a.k.a B16f00t
     ** Github: https://github.com/B16f00t
 
@@ -122,8 +123,8 @@ if __name__ == "__main__":
     mode_parser = parser.add_mutually_exclusive_group()
     mode_parser.add_argument("-f", "--file", help="Database file to encrypt o decrypt", nargs='?')
     mode_parser.add_argument("-p", "--path", help="Database path to decrypt", nargs='?')
-    parser.add_argument("-d", "--decrypt", help="Whatsapp Key path (Decrypt database)")
-    parser.add_argument("-e", "--encrypt", help="'Whatsapp Key path' + 'msgstore.db.crypt12' (Encrypt database)", nargs=2)
+    parser.add_argument("-d", "--decrypt", help="WhatsApp Key path (Decrypt database)")
+    parser.add_argument("-e", "--encrypt", help="'WhatsApp Key path' + 'msgstore.db.crypt12' (Encrypt database)", nargs=2)
     parser.add_argument("-o", "--output", help="Database output file or path")
     args = parser.parse_args()
 
@@ -161,7 +162,7 @@ if __name__ == "__main__":
                     print("[i] Starting to decrypt...")
                     dir, subdirs, files = next(os.walk(args.path))
                     for crypt_file in files:
-                        if ".crypt12" == os.path.splitext(crypt_file)[1]:
+                        if os.path.splitext(crypt_file)[1] == ".crypt12":
                             output = args.output + os.path.splitext(crypt_file)[0]
                             if sys.platform == "win32" or sys.platform == "win64" or sys.platform == "cygwin":
                                 decrypt_win(dir + crypt_file, args.decrypt, output)

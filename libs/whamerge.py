@@ -1,4 +1,4 @@
-﻿#!/usr/bin/python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
 import argparse
@@ -42,22 +42,22 @@ def banner():
     """ Function Banner """
 
     print("""
-     __      __.__                                               
-    /  \    /  \  |__ _____    _____   ___________  ____   ____  
-    \   \/\/   /  |  \\\\__  \  /     \_/ __ \_  __ \/ ___\_/ __ \ 
-     \        /|   Y  \/ __ \|  Y Y  \  ___/|  | \/ /_/  >  ___/ 
+     __      __.__
+    /  \    /  \  |__ _____    _____   ___________  ____   ____
+    \   \/\/   /  |  \\\\__  \  /     \_/ __ \_  __ \/ ___\_/ __ \\
+     \        /|   Y  \/ __ \|  Y Y  \  ___/|  | \/ /_/  >  ___/
       \__/\  / |___|  (____  /__|_|  /\___  >__|  \___  / \___  >
-           \/       \/     \/      \/     \/     /_____/      \/ 
-    ------------------- Whatsapp Merger v""" + version + """ -----------------
+           \/       \/     \/      \/     \/     /_____/      \/
+    ------------------- WhatsApp Merger v""" + version + """ -------------------
     """)
 
 def help():
     """ Function show help """
 
-    print("""
+    print("""\
     ** Author: Ivan Moreno a.k.a B16f00t
     ** Github: https://github.com/B16f00t
-    
+
     Usage: python whamerge.py -h (for help)
     """)
 
@@ -70,7 +70,7 @@ def merge(db_path, db_name):
         list_dbs = []
 
         for db_file in os.listdir(args.path):
-            if ".db" == os.path.splitext(db_file)[1]:
+            if os.path.splitext(db_file)[1] == ".db":
                 list_dbs.append(db_file)
 
         list_dbs = sorted(list_dbs, reverse=True)
@@ -116,10 +116,10 @@ def merge(db_path, db_name):
                 # Open write connection
                 with sqlite3.connect(db_name) as output:
                     cursor_write = output.cursor()
-                    
+
                 cursor_write.execute("SELECT _id FROM messages;")
                 ids_message_write = cursor_write.fetchall()
-                
+
                 cursor_write.execute("SELECT _id FROM chat_list;")
                 ids_chatlist_write = cursor_write.fetchall()
 
@@ -133,10 +133,10 @@ def merge(db_path, db_name):
                 # Open read connection
                 with sqlite3.connect(db_path + filename) as orig:
                     cursor_read = orig.cursor()
-                    
+
                 cursor_read.execute("SELECT _id FROM messages;")
                 ids_message_read = cursor_read.fetchall()
-                
+
                 cursor_read.execute("SELECT _id FROM chat_list;")
                 ids_chatlist_read = cursor_read.fetchall()
 
@@ -238,7 +238,7 @@ def merge_win(db_path, db_name):
         list_dbs = []
 
         for db_file in os.listdir(args.path):
-            if ".db" == os.path.splitext(db_file)[1]:
+            if os.path.splitext(db_file)[1] == ".db":
                 list_dbs.append(db_file)
 
         list_dbs = sorted(list_dbs, reverse=True)

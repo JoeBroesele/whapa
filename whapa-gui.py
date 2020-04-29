@@ -1,3 +1,5 @@
+#!/usr/bin/env python3
+
 import os
 import time
 import webbrowser
@@ -106,12 +108,12 @@ class Whapa:
             self.whagodri_path = StringVar(value=os.getcwd() + "/")
             self.whacipher_path = StringVar(value=os.getcwd() + "/")
             self.whamerge_file = StringVar(value=os.getcwd() + "/msgstore_merge.db")
-            self.whacipher_file = StringVar(value=os.getcwd() + "/msgstore.db.cript12")
+            self.whacipher_file = StringVar(value=os.getcwd() + "/msgstore.db.crypt12")
             self.whacipher_key = StringVar(value=os.getcwd() + "/key")
             self.whacipher_out = StringVar(value=os.getcwd() + "/msgstore.db")
-            self.whacipher_out_en = StringVar(value=os.getcwd() + "/msgstore.db.cript12")
+            self.whacipher_out_en = StringVar(value=os.getcwd() + "/msgstore.db.crypt12")
             self.whacipher_file_en = StringVar(value=os.getcwd() + "/msgstore.db")
-            self.whacipher_crypt_en = StringVar(value=os.getcwd() + "/msgstore.db.cript12")
+            self.whacipher_crypt_en = StringVar(value=os.getcwd() + "/msgstore.db.crypt12")
             self.whacipher_key_en = StringVar(value=os.getcwd() + "/key")
             self.whapa_file = StringVar(value=os.getcwd() + "/msgstore.db")
             self.whapa_wa = StringVar(value=os.getcwd() + "/wa.db")
@@ -120,12 +122,12 @@ class Whapa:
             self.whagodri_path = StringVar(value=os.getcwd() + "\\")
             self.whacipher_path = StringVar(value=os.getcwd() + "\\")
             self.whamerge_file = StringVar(value=os.getcwd() + r"\msgstore_merge.db")
-            self.whacipher_file = StringVar(value=os.getcwd() + r"\msgstore.db.cript12")
+            self.whacipher_file = StringVar(value=os.getcwd() + r"\msgstore.db.crypt12")
             self.whacipher_key = StringVar(value=os.getcwd() + r"\key")
             self.whacipher_out = StringVar(value=os.getcwd() + r"\msgstore.db")
-            self.whacipher_out_en = StringVar(value=os.getcwd() + r"\msgstore.db.cript12")
+            self.whacipher_out_en = StringVar(value=os.getcwd() + r"\msgstore.db.crypt12")
             self.whacipher_file_en = StringVar(value=os.getcwd() + r"\msgstore.db")
-            self.whacipher_crypt_en = StringVar(value=os.getcwd() + r"\msgstore.db.cript12")
+            self.whacipher_crypt_en = StringVar(value=os.getcwd() + r"\msgstore.db.crypt12")
             self.whacipher_key_en = StringVar(value=os.getcwd() + r"\key")
             self.whapa_file = StringVar(value=os.getcwd() + r"\msgstore.db")
             self.whapa_wa = StringVar(value=os.getcwd() + r"\wa.db")
@@ -176,7 +178,7 @@ class Whapa:
         self.note.grid(row=2, padx=15, pady=15, sticky="we")
 
         # Tab 1 Whapa
-        self.label_whapa = Label(self.tab1, text="Whatsapp Parser", font=('courier', 15, 'bold'))
+        self.label_whapa = Label(self.tab1, text="WhatsApp Parser", font=('courier', 15, 'bold'))
         self.label_whapa.grid(row=0, column=0, sticky="we", padx=5, pady=5, columnspan=2)
 
         self.frame_whapa_db = LabelFrame(self.tab1, text="Database")
@@ -221,7 +223,7 @@ class Whapa:
         self.check_whapa_te.grid(row=1, column=0, sticky="w", padx=5, pady=5)
         self.entry_whapa_te = Entry(self.frame_whapa_filter, width=20)
         self.entry_whapa_te.grid(row=1, column=1, sticky="we", padx=5, pady=5, columnspan=1)
-        self.check_whapa_w = Checkbutton(self.frame_whapa_filter, text="Whatsapp web", borderwidth=0, highlightthickness=0, variable=self.whapa_w)
+        self.check_whapa_w = Checkbutton(self.frame_whapa_filter, text="WhatsApp web", borderwidth=0, highlightthickness=0, variable=self.whapa_w)
         self.check_whapa_w.grid(row=2, column=0, sticky="w", padx=5, pady=5)
         self.check_whapa_s = Checkbutton(self.frame_whapa_filter, text="Starred", borderwidth=0, highlightthickness=0, variable=self.whapa_s)
         self.check_whapa_s.grid(row=3, column=0, sticky="w", padx=5, pady=5)
@@ -315,7 +317,7 @@ class Whapa:
         ToolTip(self.button_whapa_extract, "Extract Thumbnails")
 
         # Tab 2 Whacipher
-        self.label_whacipher = Label(self.tab2, text="Whatsapp Encryption and Decryption", font=('courier', 15, 'bold'))
+        self.label_whacipher = Label(self.tab2, text="WhatsApp Encryption and Decryption", font=('courier', 15, 'bold'))
         self.label_whacipher.grid(row=0, column=0, sticky="we", padx=5, pady=5, columnspan=2)
 
         self.notewhacipher = ttk.Notebook(self.tab2)
@@ -403,7 +405,7 @@ class Whapa:
         ToolTip(self.button_whacipher_en, "Encrypt")
 
         # Tab 3 Whamerge
-        self.label_whamerge = Label(self.tab3, text="Whatsapp Merger", font=('courier', 15, 'bold'))
+        self.label_whamerge = Label(self.tab3, text="WhatsApp Merger", font=('courier', 15, 'bold'))
         self.label_whamerge.grid(row=0, column=0, padx=5, pady=5, columnspan=5)
         self.frame_whamerge = LabelFrame(self.tab3)
         self.frame_whamerge.grid(row=1, column=0, padx=5, pady=5, sticky="nsew")
@@ -433,7 +435,7 @@ class Whapa:
         ToolTip(self.label_box_whamerge_info, "The generated file is for analysis purposes, not for restoring on the phone,\n due to the fact that many tables have been omitted.")
 
         # Tab 4 Whagodri
-        self.label_wagodri = Label(self.tab4, text="Whatsapp Google Drive Extractor", font=('courier', 15, 'bold'))
+        self.label_wagodri = Label(self.tab4, text="WhatsApp Google Drive Extractor", font=('courier', 15, 'bold'))
         self.label_wagodri.grid(row=0, column=0, columnspan=2, sticky="we", padx=5, pady=5)
 
         self.frame_whagodri = LabelFrame(self.tab4, text="Information")
@@ -445,7 +447,7 @@ class Whapa:
         self.wagodri_but_list = Radiobutton(self.frame_whagodri, text='List all files', variable=self.wagodri_box_value, value='List', anchor="w", compound='left')
         self.wagodri_but_list.config(bd=4, borderwidth=0, highlightthickness=0)
         self.wagodri_but_list.grid(row=1, column=0, padx=5, pady=5, sticky="nswe")
-        self.wagodri_but_listw = Radiobutton(self.frame_whagodri, text='List Whatsapp database file', variable=self.wagodri_box_value, value='ListW', anchor="w", compound='left')
+        self.wagodri_but_listw = Radiobutton(self.frame_whagodri, text='List WhatsApp database file', variable=self.wagodri_box_value, value='ListW', anchor="w", compound='left')
         self.wagodri_but_listw.config(bd=4, borderwidth=0, highlightthickness=0)
         self.wagodri_but_listw.grid(row=2, column=0, padx=5, pady=5, sticky="nswe")
         self.wagodri_box_value.set('Info')

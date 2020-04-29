@@ -1,17 +1,21 @@
-from gpsoauth import google
+#!/usr/bin/env python3
+
 from configparser import ConfigParser
 import json
 import os
 import re
-import requests
 import sys
 import queue as queue
 import threading
 import time
 import argparse
+import getpass
+import requests
+from gpsoauth import google
 
 
 # Define global variable
+version = "1.1"
 exitFlag = 0
 nextPageToken = ""
 backups = []
@@ -22,22 +26,23 @@ workQueue = queue.Queue(9999999)
 def banner():
     """ Function Banner """
     print("""
-     __      __.__             ________      ________        .__ 
+     __      __.__             ________      ________        .__
     /  \    /  \  |__ _____   /  _____/  ____\______ \_______|__|
     \   \/\/   /  |  \\\\__  \ /   \  ___ /  _ \|    |  \_  __ \  |
      \        /|   Y  \/ __ \\\\    \_\  (  <_> )    `   \  | \/  |
       \__/\  / |___|  (____  /\______  /\____/_______  /__|  |__|
-           \/       \/     \/        \/              \/          
-
-    -------------- Whatsapp Google Drive Extractor --------------""")
+           \/       \/     \/        \/              \/
+    ----------- WhatsApp Google Drive Extractor v""" + version + """ ------------
+    """)
 
 
 def help():
     """ Function show help """
-    print("""    ** Author: Ivan Moreno a.k.a B16f00t
+    print("""\
+    ** Author: Ivan Moreno a.k.a B16f00t
     ** Github: https://github.com/B16f00t
     ** Fork from WhatsAppGDExtract by TripCode and forum.xda-developers.com
-    
+
     Usage: python3 whagodri.py -h (for help)
     """)
 
@@ -55,6 +60,10 @@ def getConfigs():
         config.read('./cfg/settings.cfg'.replace("/", os.path.sep))
         gmail = config.get('auth', 'gmail')
         passw = config.get('auth', 'passw')
+        if not passw or passw == 'yourpassword':
+            passw = getpass.getpass(prompt='Google password for account \'' + gmail + '\': ', stream=None)
+        if not passw:
+            quit('[e] The password must not be empty!')
         devid = config.get('auth', 'devid')
         celnumbr = config.get('auth', 'celnumbr').lstrip('+0')
         pkg = config.get('app', 'pkg')
@@ -62,8 +71,9 @@ def getConfigs():
         client_pkg = config.get('client', 'pkg')
         client_sig = config.get('client', 'sig')
         client_ver = config.get('client', 'ver')
-    except(ConfigParser.NoSectionError, ConfigParser.NoOptionError):
-        quit('The "./cfg/settings.cfg" file is missing or corrupt!'.replace("/", os.path.sep))
+#    except(ConfigParser.NoSectionError, ConfigParser.NoOptionError):
+    except Exception as e:
+        quit('[e] The "./cfg/settings.cfg" file is missing or corrupt!'.replace("/", os.path.sep) + " Error: " + str(e))
 
 
 def size(obj):
@@ -89,7 +99,7 @@ def getGoogleAccountTokenFromAuth():
         return token.group(1)
     else:
         quit(request.text)
- 
+
 
 def getGoogleDriveToken(token):
     payload = {'Token':token, 'app':pkg, 'client_sig':sig, 'device':devid, 'google_play_services_version':client_ver, 'service':'oauth2:https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file', 'has_permission':'1'}
@@ -242,11 +252,11 @@ def getMultipleFilesThread(bearer, url, local, now, lenfiles, threadName):
 # Initializing
 if __name__ == "__main__":
     banner()
-    parser = argparse.ArgumentParser(description="Extract your Whatsapp files from Google Drive")
+    parser = argparse.ArgumentParser(description="Extract your WhatsApp files from Google Drive")
     user_parser = parser.add_mutually_exclusive_group()
-    user_parser.add_argument("-i", "--info", help="Show information about Whatsapp backups", action="store_true")
+    user_parser.add_argument("-i", "--info", help="Show information about WhatsApp backups", action="store_true")
     user_parser.add_argument("-l", "--list", help="List all available files", action="store_true")
-    user_parser.add_argument("-lw", "--list_whatsapp", help="List Whatsapp backups", action="store_true")
+    user_parser.add_argument("-lw", "--list_whatsapp", help="List WhatsApp backups", action="store_true")
     user_parser.add_argument("-p", "--pull", help="Pull a file from Google Drive")
     user_parser.add_argument("-s", "--sync", help="Sync all files locally", action="store_true")
     user_parser.add_argument("-si", "--s_images", help="Sync Images files locally", action="store_true")
@@ -259,7 +269,7 @@ if __name__ == "__main__":
     if os.path.isfile('./cfg/settings.cfg'.replace("/", os.path.sep)) is False:
         create_settings_file()
 
-    if len(sys.argv) == 0:
+    if len(sys.argv) == 1:
         help()
     else:
         print("[i] Searching...\n")

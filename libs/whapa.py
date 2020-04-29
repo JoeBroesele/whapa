@@ -1,7 +1,6 @@
-﻿    #!/usr/bin/python3
+#!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from colorama import init, Fore
 from configparser import ConfigParser
 import html
 import distutils.dir_util
@@ -11,6 +10,8 @@ import os
 import time
 import sys
 import random
+import re
+from colorama import init, Fore
 
 # Define global variable
 arg_user = ""
@@ -19,7 +20,7 @@ message = ""
 report_var = "None"
 report_html = ""
 report_group = ""
-version = "1.0"
+version = "1.1"
 names_dict = {}            # names wa.db
 color = {}                 # participants color
 current_color = "#5586e5"  # default participant color
@@ -28,23 +29,32 @@ current_color = "#5586e5"  # default participant color
 def banner():
     """ Function Banner """
     print("""
-     __      __.__          __________         
-    /  \    /  \  |__ _____ \______   \_____   
-    \   \/\/   /  |  \\\\__  \ |     ___/\__  \  
-     \        /|   Y  \/ __ \|    |     / __ \_
+     __      __.__          __________
+    /  \    /  \  |__ _____ \______   \_____
+    \   \/\/   /  |  \\\\__  \ |     ___/\__  \\
+     \        /|   Y  \/ __ \|    |     / __ \\_
       \__/\  / |___|  (____  /____|    (____  /
-           \/       \/     \/               \/ 
-    ---------- Whatsapp Parser v""" + version + """ -----------
+           \/       \/     \/               \/
+    ---------- WhatsApp Parser v""" + version + """ -----------
     """)
 
 
 def help():
     """ Function show help """
-    print("""    ** Author: Ivan Moreno a.k.a B16f00t
+    print("""\
+    ** Author: Ivan Moreno a.k.a B16f00t
     ** Github: https://github.com/B16f00t
-    
+
     Usage: python3 whapa.py -h (for help)
     """)
+
+
+# Search for URLs in a text and replace them with links.
+# Code found here:
+# https://stackoverflow.com/questions/1071191/detect-urls-in-a-string-and-wrap-with-a-href-tag
+def linkify(text):
+    URL_REGEX = re.compile(r'''((?:mailto:|ftp://|http[s]?://)[^ <>'"{}|\\^`[\]]*)''')
+    return URL_REGEX.sub(r'<a href="\1">\1</a>', text)
 
 
 def db_connect(db):
@@ -158,6 +168,7 @@ def participants(obj):
     sql_string_group = "SELECT jid, admin FROM group_participants WHERE gjid='" + str(obj) + "'"
     sql_consult_group = cursor.execute(sql_string_group)
     report_group = ""
+    random.seed(0)  # For reproducible color assignment with 'random.choice(hexcolor)'.
     for i in sql_consult_group:
         if i[0]:  # Others
             hexcolor = ["#800000", "#00008B", "#006400", "#800080", "#8B4513", "#FF4500", "#2F4F4F", "#DC143C", "#696969", "#008B8B", "#D2691E", "#CD5C5C", "#4682B4"]
@@ -221,10 +232,10 @@ def report(obj, html):
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Report makes with Whatsapp Parser Tool">
+    <meta name="description" content="Report made with WhatsApp Parser Tool">
     <meta name="author" content="B16f00t">
     <link rel="shortcut icon" href="../images/logo.png">
-    <title>Whatsapp Parser Tool v""" + version + """ Report</title>
+    <title>WhatsApp Parser Tool v""" + version + """ Report - """ + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """</title>
     <!-- Bootstrap core CSS -->
     <link href="dist/css/bootstrap.css" rel="stylesheet">
     <!-- Bootstrap theme -->
@@ -256,12 +267,16 @@ background-color: #cdcdcd;
 <body background="../images/background.png">
 <!-- Fixed navbar -->
     <div class="container theme-showcase">
-        <div class="header">
+        <div class="header">"""
+        if logo:
+            rep_ini += """
             <table style="width:100%">
-                <h1 align="left"><img src='.""" + logo + """' height=128 width=128 align="center">&nbsp;""" + company + """</h1>
+                <h1 align="left"><img src='.""" + logo + """' height="128" width="128" align="center">&nbsp;""" + company + """</h1>"""
+            if record + unit + examiner + notes:
+                rep_ini += """
                 <tr>
                     <th>Record</th>
-                    <th>Unit / Company</th> 
+                    <th>Unit / Company</th>
                     <th>Examiner</th>
                     <th>Date</th>
                 </tr>
@@ -276,8 +291,11 @@ background-color: #cdcdcd;
                 </tr>
                 <tr>
                     <td colspan="4">""" + notes + """</td>
-                </tr>
-            </table>
+                </tr>"""
+        if logo:
+            rep_ini += """
+            </table>"""
+        rep_ini += """
             <h2 align=center> Chat </h2>
             <h3 align=center> """ + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """ </h3>
             """ + report_group + """
@@ -295,7 +313,7 @@ background-color: #cdcdcd;
     <meta name="description" content="Informe creado por WhatsApp Parser Tool">
     <meta name="author" content="B16f00t">
     <link rel="shortcut icon" href="../images/logo.png">
-    <title>Whatsapp Parser Tool v""" + version + """ Report</title>
+    <title>WhatsApp Parser Tool v""" + version + """ Report</title>
     <!-- Bootstrap core CSS -->
     <link href="dist/css/bootstrap.css" rel="stylesheet">
     <!-- Bootstrap theme -->
@@ -327,12 +345,16 @@ background-color: #cdcdcd;
 <body  background="../images/background.png">
 <!-- Fixed navbar -->
     <div class="container theme-showcase">
-        <div class="header">
+        <div class="header">"""
+        if logo:
+            rep_ini += """
             <table style="width:100%">
-                <h1 align="left"><img src='.""" + logo + """' height=128 width=128 align="center">&nbsp;""" + company + """</h1>
+                <h1 align="left"><img src='.""" + logo + """' height="128" width="128" align="center">&nbsp;""" + company + """</h1>"""
+            if record + unit + examiner + notes:
+                rep_ini += """
                 <tr>
                     <th>Registro</th>
-                    <th>Unidad / Compañia</th> 
+                    <th>Unidad / Compañia</th>
                     <th>Examinador</th>
                     <th>Fecha</th>
                 </tr>
@@ -347,8 +369,11 @@ background-color: #cdcdcd;
                 </tr>
                 <tr>
                     <td colspan="4">""" + notes + """</td>
-                </tr>
-            </table>
+                </tr>"""
+        if logo:
+            rep_ini += """
+            </table>"""
+        rep_ini += """
             <h2 align=center> Conversación </h2>
             <h3 align=center> """ + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """ </h3>
             """ + report_group + """
@@ -391,10 +416,10 @@ def index_report(obj, html):
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Informe realizado con Whatsapp Parser Tool">
+    <meta name="description" content="Informe realizado con WhatsApp Parser Tool">
     <meta name="author" content="B16f00t">
-    <link rel="shortcut icon" href="../cfg/logo.png">
-    <title>Whatsapp Parser Tool v""" + version + """ Report Index</title>
+    <link rel="shortcut icon" href="../images/logo.png">
+    <title>WhatsApp Parser Tool v""" + version + """ - Report Index</title>
     <!-- Bootstrap core CSS -->
     <link href="dist/css/bootstrap.css" rel="stylesheet">
     <!-- Bootstrap theme -->
@@ -402,7 +427,7 @@ def index_report(obj, html):
     <!-- Custom styles for this template -->
     <link href="../cfg/chat.css" rel="stylesheet">
 </head>
-    
+
 <style>
 table {
 font-family: arial, sans-serif;
@@ -422,15 +447,17 @@ background-color: #dddddd;
     width: 100%;
 }
 </style>
-    
+
 <body  background="../images/background-index.png">
     <!-- Fixed navbar -->
-        <div class="containerindex theme-showcase">
-            <h1 align="left"><img src='.""" + logo + """' height=128 width=128 align="center">&nbsp;""" + company + """</h1>
+        <div class="containerindex theme-showcase">"""
+        if logo:
+            rep_ini += """
+            <h1 align="left"><img src='.""" + logo + """' height="128" width="128" align="center">&nbsp;""" + company + """</h1>"""
+        rep_ini += """
             <h2 align=center> Listado de conversaciones </h2>
             <div class="header">
-                <table style="width:100%">
-                    """ + obj + """
+                <table style="width:100%">""" + obj + """
                 </table>
             </div>
         </div>
@@ -452,10 +479,10 @@ background-color: #dddddd;
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Report makes with Whatsapp Parser Tool">
+    <meta name="description" content="Report made with WhatsApp Parser Tool">
     <meta name="author" content="B16f00t">
     <link rel="shortcut icon" href="../images/logo.png">
-    <title>Whatsapp Parser Tool v""" + version + """ Report Index</title>
+    <title>WhatsApp Parser Tool v""" + version + """ - Report Index</title>
     <!-- Bootstrap core CSS -->
     <link href="dist/css/bootstrap.css" rel="stylesheet">
     <!-- Bootstrap theme -->
@@ -484,17 +511,19 @@ background-color: #dddddd;
 }
 </style>
 
-<body>
-<!-- Fixed navbar -->
-    <div class="containerindex theme-showcase">
-        <h1 align="left"><img src=.""" + logo + """ height=128 width=128 align="center">&nbsp;""" + company + """</h1>
-        <h2 align=center>  Chats list </h2>
-        <div class="header">
-            <table style="width:100%">
-            """ + obj + """
-            </table>
+<body  background="../images/background-index.png">
+    <!-- Fixed navbar -->
+        <div class="containerindex theme-showcase">"""
+        if logo:
+            rep_ini += """
+            <h1 align="left"><img src=.""" + logo + """ height="128" width="128" align="center">&nbsp;""" + company + """</h1>"""
+        rep_ini += """
+            <h2 align=center> Chats List </h2>
+            <div class="header">
+                <table style="width:100%">""" + obj + """
+                </table>
+            </div>
         </div>
-    </div>
 <!-- /container -->
 <!-- Bootstrap core JavaScript
     ================================================== -->
@@ -565,12 +594,12 @@ def reply(id):
                         ans = (str(rep[15]).split('@'))[0] + gets_name(rep[15])
 
         if rep[22] and int(rep[22]) > 0:  # Forwarded
-                if report_var == 'EN':
-                    reply_msj += "<br><font color=\"#8b8878\" > &#10150; Forwarded</font>"
-                elif report_var == 'ES':
-                    reply_msj += "<br><font color=\"#8b8878\" > &#10150; Reenviado</font>"
-                else:
-                    ans += Fore.RED + " - Forwarded" + Fore.RESET
+            if report_var == 'EN':
+                reply_msj += "<br><font color=\"#8b8878\" > &#10150; Forwarded</font>"
+            elif report_var == 'ES':
+                reply_msj += "<br><font color=\"#8b8878\" > &#10150; Reenviado</font>"
+            else:
+                ans += Fore.RED + " - Forwarded" + Fore.RESET
 
         if int(rep[8]) == 0:  # media_wa_type 0, text message
             if (report_var == 'EN') or (report_var == 'ES'):
@@ -602,7 +631,7 @@ def reply(id):
                 else:
                     ans += Fore.RED + " - Name: " + Fore.RESET + thumb + "\n"
             if (report_var == 'EN') or (report_var == 'ES'):
-                reply_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "'width=\"100\" height=\"100\"/></a>"
+                reply_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "' width=\"100\" height=\"100\"/></a>"
 
         elif int(rep[8]) == 2:  # media_wa_type 2, Audio
             chain = rep[17].split(b'\x77\x02')[0]
@@ -632,6 +661,11 @@ def reply(id):
                         distutils.dir_util.mkpath("./Media/WhatsApp Video")
                         with open(thumb, 'wb') as profile_file:
                             profile_file.write(rep[19])
+                    # Save separate thumbnail image for video content.
+                    if os.path.isfile(thumb + ".jpg") is False:
+                        distutils.dir_util.mkpath("./Media/WhatsApp Video")
+                        with open(thumb + ".jpg", 'wb') as profile_file:
+                            profile_file.write(rep[19])
             if rep[11]:  # media_caption
                 if (report_var == 'EN') or (report_var == 'ES'):
                     reply_msj += "<br>" + thumb + " - " + html.escape(rep[11])
@@ -644,7 +678,7 @@ def reply(id):
                     ans += Fore.RED + " - Name: " + Fore.RESET + thumb + "\n"
             if (report_var == 'EN') or (report_var == 'ES'):
                 reply_msj += " " + size_file(rep[9]) + " - " + duration_file(rep[12])
-                reply_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "'width=\"100\" height=\"100\"/></a>"
+                reply_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + ".jpg" + "' width=\"100\" height=\"100\"/></a>"
             else:
                 ans += Fore.RED + "Type: " + Fore.RESET + rep[7] + Fore.RED + " - Size: " + Fore.RESET + str(rep[9]) + " bytes " + size_file(rep[9]) + Fore.RED + " - Duration: " + Fore.RESET + duration_file(rep[12]) + "\n"
 
@@ -744,6 +778,12 @@ def reply(id):
                     if rep[19]:  # raw_data exists
                         with open(thumb, 'wb') as profile_file:
                             profile_file.write(rep[19])
+                # Save separate thumbnail image for video content.
+                if os.path.isfile(thumb + ".jpg") is False:
+                    distutils.dir_util.mkpath("./Media/WhatsApp Animated Gifs")
+                    if rep[19]:  # raw_data exists
+                        with open(thumb + ".jpg", 'wb') as profile_file:
+                            profile_file.write(rep[19])
 
             if rep[11]:  # media_caption
                 if (report_var == 'EN') or (report_var == 'ES'):
@@ -757,7 +797,7 @@ def reply(id):
                     ans += Fore.RED + " - Name: " + Fore.RESET + thumb + "\n"
 
             if (report_var == 'EN') or (report_var == 'ES'):
-                reply_msj += " - Gif - " + size_file(rep[9]) + " " + duration_file(rep[12]) + "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "'width=\"100\" height=\"100\"/></a>"
+                reply_msj += " - Gif - " + size_file(rep[9]) + " " + duration_file(rep[12]) + "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + ".jpg" + "' width=\"100\" height=\"100\"/></a>"
             else:
                 ans += Fore.RED + "Type: " + Fore.RESET + "Gif" + Fore.RED + " - Size: " + Fore.RESET + str(rep[9]) + " bytes " + size_file(rep[9]) + Fore.RED + " - Duration: " + Fore.RESET + duration_file(rep[12]) + "\n"
 
@@ -814,7 +854,7 @@ def reply(id):
                 thumb = (b"./" + chain[i:b]).decode('UTF-8', 'ignore')
 
             if (report_var == 'EN') or (report_var == 'ES'):
-                reply_msj += "<br>" + "Sticker - " + size_file(rep[9]) + "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "'width=\"100\" height=\"100\"/></a>"
+                reply_msj += "<br>" + "Sticker - " + size_file(rep[9]) + "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "' width=\"100\" height=\"100\"/></a>"
             else:
                 ans += Fore.RED + " - Type: " + Fore.RESET + "Sticker" + Fore.RED + " - Size: " + Fore.RESET + str(rep[9]) + " bytes " + size_file(rep[9]) + Fore.RED + "\n"
 
@@ -1234,7 +1274,7 @@ def messages(consult, rows, report_html):
                                 message += "Thumbnail was saved on local path '" + thumb + "'\n"
 
                         if (report_var == 'EN') or (report_var == 'ES'):
-                            report_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "'width=\"100\" height=\"100\"/></a>"
+                            report_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "' width=\"100\" height=\"100\"/></a>"
 
                     elif int(data[8]) == 2:  # media_wa_type 2, Audio
                         chain = data[17].split(b'\x77\x02')[0]
@@ -1295,8 +1335,21 @@ def messages(consult, rows, report_html):
                             if report_var == 'None':
                                 message += "Thumbnail was saved on local path '" + thumb + "'\n"
 
+                        # Save separate thumbnail image for video content.
+                        if os.path.isfile(thumb + ".jpg") is False:
+                            with open(thumb + ".jpg", 'wb') as profile_file:
+                                if data[19]:  # raw_data exists
+                                    profile_file.write(data[19])
+                                elif data[22]:  # Gets the thumbnail of the message_thumbnails
+                                    profile_file.write(data[22])
+                                else:
+                                    profile_file.write(b"")
+
+                            if report_var == 'None':
+                                message += "Thumbnail for video '" + thumb + "' was saved on local path '" + thumb + ".jpg" + "'\n"
+
                         if (report_var == 'EN') or (report_var == 'ES'):
-                            report_msj += "<br/> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "'width=\"100\" height=\"100\"/></a>"
+                            report_msj += "<br/> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + ".jpg" + "' width=\"100\" height=\"100\"/></a>"
 
                     elif int(data[8]) == 4:  # media_wa_type 4, Contact
                         if report_var == 'EN':
@@ -1451,8 +1504,21 @@ def messages(consult, rows, report_html):
                             if report_var == 'None':
                                 message += "Thumbnail was saved on local path '" + thumb + "'\n"
 
+                        # Save separate thumbnail image for video content.
+                        if os.path.isfile(thumb + ".jpg") is False:
+                            with open(thumb + ".jpg", 'wb') as profile_file:
+                                if data[19]:  # raw_data exists
+                                    profile_file.write(data[19])
+                                elif data[22]:  # Gets the thumbnail of the message_thumbnails
+                                    profile_file.write(data[22])
+                                else:
+                                    profile_file.write(b"")
+
+                            if report_var == 'None':
+                                message += "Thumbnail for video '" + thumb + "' was saved on local path '" + thumb + ".jpg" + "'\n"
+
                         if (report_var == 'EN') or (report_var == 'ES'):
-                            report_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "'width=\"100\" height=\"100\"/></a>"
+                            report_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + ".jpg" + "' width=\"100\" height=\"100\"/></a>"
 
                     elif int(data[8]) == 14:  # media_wa_type 14  Vcard multiples
                         concat = ""
@@ -1509,7 +1575,7 @@ def messages(consult, rows, report_html):
                             thumb = (b"./" + chain[i:b]).decode('UTF-8', 'ignore')
 
                         if (report_var == 'EN') or (report_var == 'ES'):
-                            report_msj += " Sticker - " + size_file(data[9]) + "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "'width=\"100\" height=\"100\"/></a>"
+                            report_msj += " Sticker - " + size_file(data[9]) + "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "' width=\"100\" height=\"100\"/></a>"
                         else:
                             message += Fore.GREEN + "Type: " + Fore.RESET + "Sticker" + Fore.GREEN + " - Size: " + Fore.RESET + str(data[9]) + " bytes " + size_file(data[9]) + Fore.GREEN + "\n"
 
@@ -1528,14 +1594,14 @@ def messages(consult, rows, report_html):
                             rep_med += """
             <li>
                 <div class="bubble2">
-                    <span class="personSay2">""" + report_msj + """</span><br>
+                    <span class="personSay2">""" + linkify(report_msj) + """</span><br>
                     <span class="time2 round">""" + report_time + "&nbsp" + report_status + """</span><br>
                 </div>
             </li>"""
                         elif (report_name == "System Message") or (report_name == "Mensaje de Sistema"):
                             rep_med += """
             <li>
-                <div class="bubble-system"> 
+                <div class="bubble-system">
                     <span class="time-system round">""" + report_time + "&nbsp" + report_status + """</span><br>
                     <span class="person-System">""" + report_msj + """</span><br>
                 </div>
@@ -1543,9 +1609,9 @@ def messages(consult, rows, report_html):
                         else:
                             rep_med += """
             <li>
-                <div class="bubble"> 
+                <div class="bubble">
                     <span class="personName">""" + report_name + """</span><br>
-                    <span class="personSay">""" + report_msj + """</span><br>
+                    <span class="personSay">""" + linkify(report_msj) + """</span><br>
                     <span class="time round">""" + report_time + "&nbsp" + report_status + """</span><br>
                 </div>
             </li>"""
@@ -1664,13 +1730,13 @@ def info(opt):
                     rep_med += """
                                        <li>
                                        <div class="bubble2"> <span class="personName">""" + report_name + """</span> <br>
-                                           <span class="personSay2">""" + report_msj + """</span> </div>
+                                           <span class="personSay2">""" + linkify(report_msj) + """</span> </div>
                                        <span class=" time2 round ">""" + report_time + "&nbsp" + report_status + """</span> </li>"""
                 else:
                     rep_med += """
                                        <li>
                                        <div class="bubble"> <span class="personName2">""" + report_name + """</span> <br>
-                                           <span class="personSay">""" + report_msj + """</span> </div>
+                                           <span class="personSay">""" + linkify(report_msj) + """</span> </div>
                                        <span class=" time round ">""" + report_time + "&nbsp" + report_status + """</span> </li>"""
             elif report_var == 'ES':
                 report_time = time.strftime('%d-%m-%Y %H:%M', time.localtime(data[2] / 1000))
@@ -1678,13 +1744,13 @@ def info(opt):
                     rep_med += """
                                        <li>
                                        <div class="bubble2"> <span class="personName">""" + report_name + """</span> <br>
-                                           <span class="personSay2">""" + report_msj + """</span> </div>
+                                           <span class="personSay2">""" + linkify(report_msj) + """</span> </div>
                                        <span class=" time2 round ">""" + report_time + "&nbsp" + report_status + """</span> </li>"""
                 else:
                     rep_med += """
                                        <li>
                                        <div class="bubble"> <span class="personName2">""" + report_name + """</span> <br>
-                                           <span class="personSay">""" + report_msj + """</span> </div>
+                                           <span class="personSay">""" + linkify(report_msj) + """</span> </div>
                                        <span class=" time round ">""" + report_time + "&nbsp" + report_status + """</span> </li>"""
             else:
                 print(message)
@@ -1720,7 +1786,7 @@ def get_configs():
         examiner = config_report.get('report', 'examiner')
         notes = config_report.get('report', 'notes')
     except Exception as e:
-        print("The 'settings.cfg' file is missing or corrupt!")
+        print("The 'settings.cfg' file is missing or corrupt! Error: " + str(e))
 
 
 def extract(obj, total):
@@ -1780,7 +1846,7 @@ if __name__ == "__main__":
     user_parser.add_argument("-a", "--all", help="Show all chat messages classified by phone number, group number and broadcast list", action="store_true")
     parser.add_argument("-wa", "--wa_file", help="Show names along with numbers")
     parser.add_argument("-t", "--text", help="Show messages by text match")
-    parser.add_argument("-w", "--web", help="Show messages made by Whatsapp Web", action="store_true")
+    parser.add_argument("-w", "--web", help="Show messages made by WhatsApp Web", action="store_true")
     parser.add_argument("-s", "--starred", help="Show messages starred by owner", action="store_true")
     parser.add_argument("-b", "--broadcast", help="Show messages send by broadcast", action="store_true")
     parser.add_argument("-ts", "--time_start", help="Show messages by start time (dd-mm-yyyy HH:MM)")
@@ -1912,13 +1978,15 @@ if __name__ == "__main__":
                     chats_live = []
                     for i in sql_consult_chat:
                         chats_live.append(i[0])
-                    report_med = " "
+                    report_med = ""
+                    report_med_newline = "\n                    "
                     print("Loading data ...")
                     for i in chats_live:
                         sql_string_copy = sql_string
                         sql_count_copy = sql_count
 
                         if i.split('@')[1] == "g.us":
+                            report_med += report_med_newline
                             if report_var == 'EN':
                                 report_html = "./reports/report_group_chat_" + i + ".html"
                                 report_med += "<tr><th>Group</th><th><a href=\"report_group_chat_" + i + ".html" + "\" target=\"_blank\"> " + i + gets_name(i) + "</a></th></tr>"
@@ -1937,6 +2005,7 @@ if __name__ == "__main__":
                             report_group, color = participants(arg_group)
 
                         elif i.split('@')[1] == "s.whatsapp.net":
+                            report_med += report_med_newline
                             if report_var == 'EN':
                                 report_med += "<tr><th>User</th><th><a href=\"report_user_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\"> " + i.split('@')[0] + gets_name(i) + "</a></th></tr>"
                                 report_html = "./reports/report_user_chat_" + i.split('@')[0] + ".html"
@@ -1955,6 +2024,7 @@ if __name__ == "__main__":
                             report_group = ""
 
                         elif i.split('@')[1] == "broadcast":
+                            report_med += report_med_newline
                             if report_var == 'EN':
                                 report_med += "<tr><th>Broadcast</th><th><a href=\"report_broadcast_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\"> " + i + gets_name(i) + "</a></th></tr>"
                                 report_html = "./reports/report_broadcast_chat_" + i.split('@')[0] + ".html"
@@ -2040,7 +2110,4 @@ if __name__ == "__main__":
             if args.wa_file:
                 names(args.wa_file)
                 db_connect(args.database)
-
-
-
 
