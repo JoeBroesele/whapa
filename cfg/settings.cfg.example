@@ -1,10 +1,17 @@
+# WhatsApp Parser Toolset v1.16 settings file.
+
 [report]
 logo = ./cfg/logo.png
+logo_height = 128
 company =
 record =
 unit =
 examiner =
 notes =
+prefix = report_
+bg_index = ./images/background-index.png
+bg_report = ./images/background.png
+preview_pics_size = 100
 
 [auth]
 gmail = alias@gmail.com

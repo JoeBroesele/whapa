@@ -2,6 +2,19 @@ Changelog
 ====
 All notable changes to this project will be documented in this file.
 
+May 2020
+
+    [+] General:
+        [-] New 'whautils.py' library for improved creation and reading of 'settings.cfg' file.
+        [-] Added the shell script 'reports2pdf.sh' to convert all HTML reports into PDF files.
+    [+] whapa-gui.py v1.16
+        [-] Fixed update notification.
+    [+] whapa.py v1.2
+        [-] More options available in 'settings.cfg':
+            size of logo, prefix of report files, background image for the index and report files
+        [-] Thumbnail images are now displayed maintaining the aspect ratio.
+        [-] Removed unused code from reports.
+
 Apr 2020
 
     [+] General:

@@ -2,7 +2,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 28 Apr 2020
-# Rev.: 02 May 2020
+# Rev.: 06 May 2020
 #
 # List of files to be ignored by git.
 #
@@ -33,7 +33,13 @@ reports/
 key
 msgstore.db.crypt12
 msgstore.db
+msgstore_merge.db
 wa.db
+*.db
+*.crypt12
+
+# PDF directory.
+/PDF/
 
 # Temporary directory.
 /tmp/

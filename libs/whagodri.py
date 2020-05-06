@@ -1,6 +1,5 @@
 #!/usr/bin/env python3
 
-from configparser import ConfigParser
 import json
 import os
 import re
@@ -13,15 +12,21 @@ import getpass
 import requests
 from gpsoauth import google
 
+# Append library folder to Python path.
+sys.path.append(os.path.relpath(os.path.join(os.path.dirname(__file__), 'libs')))
 
-# Define global variable
-version = "1.1"
+import whautils
+
+# Define global variables.
+version = "1.2"
 exitFlag = 0
 nextPageToken = ""
 backups = []
 bearer = ""
 queueLock = threading.Lock()
 workQueue = queue.Queue(9999999)
+settings = whautils.settings
+
 
 def banner():
     """ Function Banner """
@@ -47,33 +52,20 @@ def help():
     """)
 
 
-def create_settings_file():
-    """ Function that creates the settings file """
-    with open('./cfg/settings.cfg'.replace("/", os.path.sep), 'w') as cfg:
-        cfg.write('[report]\nlogo = ./cfg/logo.png\ncompany =\nrecord =\nunit =\nexaminer =\nnotes =\n\n[auth]\ngmail = alias@gmail.com\npassw = yourpassword\ndevid = 1234567887654321\ncelnumbr = BackupPhoneNunmber\n\n[app]\npkg = com.whatsapp\nsig = 38a0f7d505fe18fec64fbf343ecaaaf310dbd799\n\n[client]\npkg = com.google.android.gms\nsig = 38918a453d07199354f8b19af05ec6562ced5788\nver = 9877000'.replace("/", os.path.sep))
-
-
 def getConfigs():
-    global gmail, passw, devid, pkg, sig, client_pkg, client_sig, client_ver, celnumbr
-    config = ConfigParser()
     try:
-        config.read('./cfg/settings.cfg'.replace("/", os.path.sep))
-        gmail = config.get('auth', 'gmail')
-        passw = config.get('auth', 'passw')
+        # Create the settings file if it does not exist.
+        whautils.create_settings_file()
+        # Read the settings from the settings file.
+        settings = whautils.read_settings_file()
+        passw       = settings['passw']
         if not passw or passw == 'yourpassword':
-            passw = getpass.getpass(prompt='Google password for account \'' + gmail + '\': ', stream=None)
-        if not passw:
+            settings['passw'] = getpass.getpass(prompt='Google password for account \'' + settings['gmail'] + '\': ', stream=None)
+        if not settings['passw']:
             quit('[e] The password must not be empty!')
-        devid = config.get('auth', 'devid')
-        celnumbr = config.get('auth', 'celnumbr').lstrip('+0')
-        pkg = config.get('app', 'pkg')
-        sig = config.get('app', 'sig')
-        client_pkg = config.get('client', 'pkg')
-        client_sig = config.get('client', 'sig')
-        client_ver = config.get('client', 'ver')
-#    except(ConfigParser.NoSectionError, ConfigParser.NoOptionError):
     except Exception as e:
-        quit('[e] The "./cfg/settings.cfg" file is missing or corrupt!'.replace("/", os.path.sep) + " Error: " + str(e))
+        print("[e] The settings file `{0:s}' is missing or corrupt! Error: ".format(whautils.settingsFile) + str(e))
+        sys.exit(1)
 
 
 def size(obj):
@@ -90,8 +82,8 @@ def getGoogleAccountTokenFromAuth():
                       b"6rmf5AAAAAwEAAQ==")
 
     android_key_7_3_29 = google.key_from_b64(b64_key_7_3_29)
-    encpass = google.signature(gmail, passw, android_key_7_3_29)
-    payload = {'Email':gmail, 'EncryptedPasswd':encpass, 'app':client_pkg, 'client_sig':client_sig, 'parentAndroidId':devid}
+    encpass = google.signature(settings['gmail'], settings['passw'], android_key_7_3_29)
+    payload = {'Email':settings['gmail'], 'EncryptedPasswd':encpass, 'app':settings['client_pkg'], 'client_sig':settings['client_sig'], 'parentAndroidId':settings['devid']}
     header = {'User-Agent': 'WhatsApp/2.19.244 Android/Device/Whapa'}
     request = requests.post('https://android.clients.google.com/auth', data=payload, headers=header)
     token = re.search('Token=(.*?)\n', request.text)
@@ -102,7 +94,7 @@ def getGoogleAccountTokenFromAuth():
 
 
 def getGoogleDriveToken(token):
-    payload = {'Token':token, 'app':pkg, 'client_sig':sig, 'device':devid, 'google_play_services_version':client_ver, 'service':'oauth2:https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file', 'has_permission':'1'}
+    payload = {'Token':token, 'app':settings['pkg'], 'client_sig':settings['sig'], 'device':settings['devid'], 'google_play_services_version':settings['client_ver'], 'service':'oauth2:https://www.googleapis.com/auth/drive.appdata https://www.googleapis.com/auth/drive.file', 'has_permission':'1'}
     header = {'User-Agent': 'WhatsApp/2.19.244 Android/9.0 Device/Whapa'}
     request = requests.post('https://android.clients.google.com/auth', data=payload, headers=header)
     try:
@@ -122,8 +114,8 @@ def getGoogleDriveToken(token):
 
 def gDriveFileMap(bearer, nextPageToken):
     header = {'Authorization': 'Bearer ' + bearer, 'User-Agent': 'WhatsApp/2.19.244 Android/9.0 Device/Whapa'}
-    url_data = "https://backup.googleapis.com/v1/clients/wa/backups/{}".format(celnumbr)
-    url_files = "https://backup.googleapis.com/v1/clients/wa/backups/{}/files?{}pageSize=5000".format(celnumbr, "pageToken=" + nextPageToken + "&")
+    url_data = "https://backup.googleapis.com/v1/clients/wa/backups/{}".format(settings['celnumbr'])
+    url_files = "https://backup.googleapis.com/v1/clients/wa/backups/{}/files?{}pageSize=5000".format(settings['celnumbr'], "pageToken=" + nextPageToken + "&")
     request_data = requests.get(url_data, headers=header)
     request_files = requests.get(url_files, headers=header)
     data_data = json.loads(request_data.text)
@@ -145,8 +137,8 @@ def gDriveFileMap(bearer, nextPageToken):
         else:
             print("[e] No Google Drive backup: {}".format(e))
 
-    if len(backups) == 0:
-        print("[e] Unable to locate google drive file map for: {} {}".format(pkg, request_files))
+    if not backups:
+        print("[e] Unable to locate google drive file map for: {} {}".format(settings['pkg'], request_files))
 
     return data_data, backups
 
@@ -194,7 +186,7 @@ def getMultipleFiles(drives, bearer, files):
         if os.path.isfile(local_store):
             print("    [-] Number: {}/{}  => {} Skipped".format(n, lenfiles, local_store))
         else:
-            url = "https://backup.googleapis.com/v1/clients/wa/backups/{}/files/{}?alt=media".format(celnumbr, file)
+            url = "https://backup.googleapis.com/v1/clients/wa/backups/{}/files/{}?alt=media".format(settings['celnumbr'], file)
             workQueue.put({'bearer': bearer, 'url': url, 'local': local_store, 'now': n, 'lenfiles': lenfiles})
         n += 1
 
@@ -266,8 +258,6 @@ if __name__ == "__main__":
     user_parser.add_argument("-sd", "--s_databases", help="Sync Databases files locally", action="store_true")
     parser.add_argument("-o", "--output", help="Output path to save files")
     args = parser.parse_args()
-    if os.path.isfile('./cfg/settings.cfg'.replace("/", os.path.sep)) is False:
-        create_settings_file()
 
     if len(sys.argv) == 1:
         help()
@@ -297,7 +287,7 @@ if __name__ == "__main__":
                 print("    [-] Chat DB Size             : {} Bytes {}".format(json.loads(drives["metadata"])["chatdbSize"], size(int(json.loads(drives["metadata"])["chatdbSize"]))))
 
             except Exception as e:
-                print("[i] Error {}".format(e))
+                print("[i] Error: {}".format(e))
 
         elif args.list:
             print("[+] Backup name : {}".format(drives["name"]))
@@ -384,6 +374,6 @@ if __name__ == "__main__":
                     print("    [-] Skipped : {}".format(local_store))
                 else:
                     print("[+] Backup name        : {}".format(drives["name"]))
-                    downloadFileGoogleDrive(bearer, "https://backup.googleapis.com/v1/clients/wa/backups/{}/files/{}?alt=media".format(celnumbr, file), local_store)
+                    downloadFileGoogleDrive(bearer, "https://backup.googleapis.com/v1/clients/wa/backups/{}/files/{}?alt=media".format(settings['celnumbr'], file), local_store)
             except Exception as e:
                 print("[e] Unable to locate: {}".format(file))

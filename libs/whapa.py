@@ -1,7 +1,6 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-from configparser import ConfigParser
 import html
 import distutils.dir_util
 import argparse
@@ -12,22 +11,30 @@ import sys
 import random
 import re
 from colorama import init, Fore
+from PIL import Image
 
-# Define global variable
+# Append library folder to Python path.
+sys.path.append(os.path.relpath(os.path.join(os.path.dirname(__file__), 'libs')))
+
+import whautils
+
+# Define global variables.
 arg_user = ""
 arg_group = ""
+cursor = None
 message = ""
 report_var = "None"
 report_html = ""
 report_group = ""
-version = "1.1"
+version = "1.2"
 names_dict = {}            # names wa.db
 color = {}                 # participants color
 current_color = "#5586e5"  # default participant color
+settings = whautils.settings
 
 
 def banner():
-    """ Function Banner """
+    """Function Banner """
     print("""
      __      __.__          __________
     /  \    /  \  |__ _____ \______   \_____
@@ -40,7 +47,7 @@ def banner():
 
 
 def help():
-    """ Function show help """
+    """Function show help """
     print("""\
     ** Author: Ivan Moreno a.k.a B16f00t
     ** Github: https://github.com/B16f00t
@@ -58,24 +65,23 @@ def linkify(text):
 
 
 def db_connect(db):
-    """ Function connect to Database"""
+    """Function connecting to database"""
     if os.path.exists(db):
         try:
             with sqlite3.connect(db) as conn:
-                global cursor
                 cursor = conn.cursor()
                 cursor_rep = conn.cursor()
             print("msgstore.db connected\n")
             return cursor, cursor_rep
         except Exception as e:
-            print("Error connecting to Database, ", e)
+            print("Error connecting to database:", e)
     else:
         print("msgstore.db doesn't exist")
-        exit()
+        sys.exit(1)
 
 
 def status(st):
-    """ Function message status"""
+    """Function message status"""
     if st == 0 or st == 5:  # 0 for me and 5 for target
         return "Received", "&#10004;&#10004;"
     elif st == 4:
@@ -91,7 +97,7 @@ def status(st):
 
 
 def size_file(obj):
-    """ Function objects size"""
+    """Function objects size"""
     if obj > 1048576:
         obj = "(" + "{0:.2f}".format(obj / float(1048576)) + " MB)"
     else:
@@ -100,7 +106,7 @@ def size_file(obj):
 
 
 def duration_file(obj):
-    """ Function duration tiMe"""
+    """Function duration time"""
     hour = (int(obj / 3600))
     minu = int((obj - (hour * 3600)) / 60)
     seco = obj - ((hour * 3600) + (minu * 60))
@@ -113,10 +119,32 @@ def duration_file(obj):
     return obj
 
 
+def html_preview_file(file):
+    """Create an HTML image tag for a preview picture with a fixed size from an image file."""
+    return html_preview_file_size(file, int(settings['preview_pics_size']), int(settings['preview_pics_size']))
+
+
+def html_preview_file_size(file, tag_width, tag_height):
+    """Create an HTML image tag for a preview picture with a given size from an image file."""
+    try:
+        image = Image.open(file)
+        img_width, img_height = image.size
+        html_image_tag = "<img src=\"." + file + "\" "
+        # If the image is in portrait format, set a fixed width.
+        if img_width < img_height:
+            html_image_tag += "width=\"{0:d}\"".format(tag_width)
+        # If the image is in landscape format, set a fixed height.
+        else:
+            html_image_tag += "height=\"{0:d}\"".format(tag_height)
+        html_image_tag += "/>"
+        return html_image_tag
+    except Exception as e:
+        # In case of an exception, return a default string.
+        return "<img src=\"." + file + "\" height=\"{0:d}\"/>".format(tag_height)
+
+
 def names(obj):
-    """ Function saves a name list if exits wa.db"""
-    # global names_dict
-    # names_dict = {}  # jid : display_name
+    """Function saves a name list if exits wa.db"""
     if os.path.exists(obj):
         try:
             with sqlite3.connect(obj) as conn:
@@ -131,17 +159,18 @@ def names(obj):
                 except Exception as e:
                     print("Error adding items in the dictionary:", e)
         except Exception as e:
-            print("Error connecting to Database, ", e)
+            print("Error connecting to database:", e)
     else:
         print("wa database doesn't exist")
 
 
 def gets_name(obj):
-    """ Function recover a name of the wa.db"""
+    """Function recover a name of the wa.db"""
     if names_dict == {}:  # No exists wa.db
         return " "
     else:  # Exists Wa.db
-        if type(obj) is list:  # It's a list
+        #if type(obj) is list:  # It's a list
+        if isinstance(obj, list):  # It's a list
             list_broadcast = []
             for i in obj:
                 b = i + "@s.whatsapp.net"
@@ -164,7 +193,7 @@ def gets_name(obj):
 
 
 def participants(obj):
-    """ Function saves all participant in an group or broadcast"""
+    """Function saves all participant in an group or broadcast"""
     sql_string_group = "SELECT jid, admin FROM group_participants WHERE gjid='" + str(obj) + "'"
     sql_consult_group = cursor.execute(sql_string_group)
     report_group = ""
@@ -173,7 +202,6 @@ def participants(obj):
         if i[0]:  # Others
             hexcolor = ["#800000", "#00008B", "#006400", "#800080", "#8B4513", "#FF4500", "#2F4F4F", "#DC143C", "#696969", "#008B8B", "#D2691E", "#CD5C5C", "#4682B4"]
             color[i[0].split("@")[0]] = random.choice(hexcolor)
-            global current_color
             current_color = color.get(i[0].split("@")[0])
 
             if i[1] and i[1] == 0:  # User
@@ -217,13 +245,13 @@ def participants(obj):
                     report_group += "Me, "
 
     if (report_var == 'EN') or (report_var == 'ES'):
-        report_group = "<p style = 'border: 2px solid #CCCCCC; padding: 10px; background-color: #CCCCCC; color: black; font-family: arial,helvetica; font-size: 14px; font-weight: bold;'> " + report_group[:-2] + " </p>"
+        report_group = "<p style = 'border: 2px solid #CCCCCC; padding: 10px; background-color: #CCCCCC; color: black; font-family: arial,helvetica; font-size: 14px; font-weight: bold;'>" + report_group[:-2] + "</p>"
 
     return report_group, color
 
 
 def report(obj, html):
-    """ Function that makes the report """
+    """Function that makes the report """
     if report_var == 'EN':
         rep_ini = """<!DOCTYPE html>
 <html lang='""" + report_var + """'>
@@ -236,27 +264,23 @@ def report(obj, html):
     <meta name="author" content="B16f00t">
     <link rel="shortcut icon" href="../images/logo.png">
     <title>WhatsApp Parser Tool v""" + version + """ Report - """ + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """</title>
-    <!-- Bootstrap core CSS -->
-    <link href="dist/css/bootstrap.css" rel="stylesheet">
-    <!-- Bootstrap theme -->
-    <link href="dist/css/bootstrap-theme.min.css" rel="stylesheet">
     <!-- Custom styles for this template -->
     <link href="../cfg/chat.css" rel="stylesheet">
 </head>
 
 <style>
 table {
-font-family: arial, sans-serif;
-border-collapse: collapse;
-width: 100%;
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
 }
 td, th {
-border: 1px solid #000000;
-text-align: left;
-padding: 8px;
+    border: 1px solid #000000;
+    text-align: left;
+    padding: 8px;
 }
 tr:nth-child(even) {
-background-color: #cdcdcd;
+    background-color: #cdcdcd;
 }
 #map {
     height: 100px;
@@ -264,15 +288,18 @@ background-color: #cdcdcd;
 }
 </style>
 
-<body background="../images/background.png">
-<!-- Fixed navbar -->
+<body"""
+        if settings['bg_report']:
+            rep_ini += " background=\"." + settings['bg_report'] + "\""
+        rep_ini += """>
+    <!-- Fixed navbar -->
     <div class="container theme-showcase">
         <div class="header">"""
-        if logo:
+        if settings['logo']:
             rep_ini += """
             <table style="width:100%">
-                <h1 align="left"><img src='.""" + logo + """' height="128" width="128" align="center">&nbsp;""" + company + """</h1>"""
-            if record + unit + examiner + notes:
+                <h1 align="left"><img src=".""" + settings['logo'] + "\" height=\"" + settings['logo_height'] + "\" align=\"center\">&nbsp;" + settings['company'] + "</h1>"
+            if settings['record'] + settings['unit'] + settings['examiner'] + settings['notes']:
                 rep_ini += """
                 <tr>
                     <th>Record</th>
@@ -281,23 +308,23 @@ background-color: #cdcdcd;
                     <th>Date</th>
                 </tr>
                 <tr>
-                    <td>""" + record + """</td>
-                    <td>""" + unit + """</td>
-                    <td>""" + examiner + """</td>
+                    <td>""" + settings['record'] + """</td>
+                    <td>""" + settings['unit'] + """</td>
+                    <td>""" + settings['examiner'] + """</td>
                     <td>""" + time.strftime('%d-%m-%Y', time.localtime()) + """</td>
                 </tr>
                 <tr>
                     <th colspan="4">Notes</th>
                 </tr>
                 <tr>
-                    <td colspan="4">""" + notes + """</td>
+                    <td colspan="4">""" + settings['notes'] + """</td>
                 </tr>"""
-        if logo:
+        if settings['logo']:
             rep_ini += """
             </table>"""
         rep_ini += """
-            <h2 align=center> Chat </h2>
-            <h3 align=center> """ + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """ </h3>
+            <h2 align=center>Chat</h2>
+            <h3 align=center>""" + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """</h3>
             """ + report_group + """
         </div>
         <ul>"""
@@ -313,28 +340,24 @@ background-color: #cdcdcd;
     <meta name="description" content="Informe creado por WhatsApp Parser Tool">
     <meta name="author" content="B16f00t">
     <link rel="shortcut icon" href="../images/logo.png">
-    <title>WhatsApp Parser Tool v""" + version + """ Report</title>
-    <!-- Bootstrap core CSS -->
-    <link href="dist/css/bootstrap.css" rel="stylesheet">
-    <!-- Bootstrap theme -->
-    <link href="dist/css/bootstrap-theme.min.css" rel="stylesheet">
+    <title>WhatsApp Parser Tool v""" + version + """ Report - """ + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """</title>
     <!-- Custom styles for this template -->
     <link href="../cfg/chat.css" rel="stylesheet">
 </head>
 
 <style>
 table {
-font-family: arial, sans-serif;
-border-collapse: collapse;
-width: 100%;
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
 }
 td, th {
-border: 1px solid #000000;
-text-align: left;
-padding: 8px;
+    border: 1px solid #000000;
+    text-align: left;
+    padding: 8px;
 }
 tr:nth-child(even) {
-background-color: #cdcdcd;
+    background-color: #cdcdcd;
 }
 #map {
     height: 100px;
@@ -342,15 +365,18 @@ background-color: #cdcdcd;
 }
 </style>
 
-<body  background="../images/background.png">
-<!-- Fixed navbar -->
+<body"""
+        if settings['bg_report']:
+            rep_ini += " background=\"." + settings['bg_report'] + "\""
+        rep_ini += """>
+    <!-- Fixed navbar -->
     <div class="container theme-showcase">
         <div class="header">"""
-        if logo:
+        if settings['logo']:
             rep_ini += """
             <table style="width:100%">
-                <h1 align="left"><img src='.""" + logo + """' height="128" width="128" align="center">&nbsp;""" + company + """</h1>"""
-            if record + unit + examiner + notes:
+                <h1 align="left"><img src=".""" + settings['logo'] + "\" height=\"" + settings['logo_height'] + "\" align=\"center\">&nbsp;" + settings['company'] + "</h1>"
+            if settings['record'] + settings['unit'] + settings['examiner'] + settings['notes']:
                 rep_ini += """
                 <tr>
                     <th>Registro</th>
@@ -359,23 +385,23 @@ background-color: #cdcdcd;
                     <th>Fecha</th>
                 </tr>
                 <tr>
-                    <td>""" + record + """</td>
-                    <td>""" + unit + """</td>
-                    <td>""" + examiner + """</td>
+                    <td>""" + settings['record'] + """</td>
+                    <td>""" + settings['unit'] + """</td>
+                    <td>""" + settings['examiner'] + """</td>
                     <td>""" + time.strftime('%d-%m-%Y', time.localtime()) + """</td>
                 </tr>
                 <tr>
                     <th colspan="4">Observaciones</th>
                 </tr>
                 <tr>
-                    <td colspan="4">""" + notes + """</td>
+                    <td colspan="4">""" + settings['notes'] + """</td>
                 </tr>"""
-        if logo:
+        if settings['logo']:
             rep_ini += """
             </table>"""
         rep_ini += """
-            <h2 align=center> Conversación </h2>
-            <h3 align=center> """ + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """ </h3>
+            <h2 align=center>Conversación</h2>
+            <h3 align=center>""" + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """</h3>
             """ + report_group + """
         </div>
         <ul>"""
@@ -386,14 +412,7 @@ background-color: #cdcdcd;
                 </div>
             </li>
         </ul>
-    </div>
-<!-- /container -->
-<!-- Bootstrap core JavaScript
-================================================== -->
-<!-- Placed at the end of the document so the pages load faster -->
-<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
-<script src="dist/js/bootstrap.min.js"></script>
-<script src="docs-assets/js/holder.js"></script>
+    </div><!-- /container -->
 </body>
 </html>
     """
@@ -407,7 +426,7 @@ background-color: #cdcdcd;
 
 
 def index_report(obj, html):
-    """ Function that makes the index report """
+    """Function that makes the index report """
     if report_var == "ES":
         rep_ini = """<!DOCTYPE html>
 <html lang='""" + report_var + """'>
@@ -420,27 +439,23 @@ def index_report(obj, html):
     <meta name="author" content="B16f00t">
     <link rel="shortcut icon" href="../images/logo.png">
     <title>WhatsApp Parser Tool v""" + version + """ - Report Index</title>
-    <!-- Bootstrap core CSS -->
-    <link href="dist/css/bootstrap.css" rel="stylesheet">
-    <!-- Bootstrap theme -->
-    <link href="dist/css/bootstrap-theme.min.css" rel="stylesheet">
     <!-- Custom styles for this template -->
     <link href="../cfg/chat.css" rel="stylesheet">
 </head>
 
 <style>
 table {
-font-family: arial, sans-serif;
-border-collapse: collapse;
-width: 100%;
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
 }
 td, th {
-border: 1px solid #dddddd;
-text-align: left;
-padding: 8px;
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
 }
 tr:nth-child(even) {
-background-color: #dddddd;
+    background-color: #dddddd;
 }
 #map {
     height: 100px;
@@ -448,26 +463,22 @@ background-color: #dddddd;
 }
 </style>
 
-<body  background="../images/background-index.png">
+<body"""
+        if settings['bg_index']:
+            rep_ini += " background=\"." + settings['bg_index'] + "\""
+        rep_ini += """>
     <!-- Fixed navbar -->
-        <div class="containerindex theme-showcase">"""
-        if logo:
+    <div class="containerindex theme-showcase">"""
+        if settings['logo']:
             rep_ini += """
-            <h1 align="left"><img src='.""" + logo + """' height="128" width="128" align="center">&nbsp;""" + company + """</h1>"""
+        <h1 align="left"><img src=".""" + settings['logo'] + "\" height=\"" + settings['logo_height'] + "\" align=\"center\">&nbsp;" + settings['company'] + "</h1>"
         rep_ini += """
-            <h2 align=center> Listado de conversaciones </h2>
-            <div class="header">
-                <table style="width:100%">""" + obj + """
-                </table>
-            </div>
+        <h2 align=center>Listado de conversaciones</h2>
+        <div class="header">
+            <table style="width:100%">""" + obj + """
+            </table>
         </div>
-<!-- /container -->
-<!-- Bootstrap core JavaScript
-    ================================================== -->
-<!-- Placed at the end of the document so the pages load faster -->
-<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
-<script src="dist/js/bootstrap.min.js"></script>
-<script src="docs-assets/js/holder.js"></script>
+    </div><!-- /containerindex -->
 </body>
 </html>"""
 
@@ -483,27 +494,23 @@ background-color: #dddddd;
     <meta name="author" content="B16f00t">
     <link rel="shortcut icon" href="../images/logo.png">
     <title>WhatsApp Parser Tool v""" + version + """ - Report Index</title>
-    <!-- Bootstrap core CSS -->
-    <link href="dist/css/bootstrap.css" rel="stylesheet">
-    <!-- Bootstrap theme -->
-    <link href="dist/css/bootstrap-theme.min.css" rel="stylesheet">
     <!-- Custom styles for this template -->
     <link href="../cfg/chat.css" rel="stylesheet">
 </head>
 
 <style>
 table {
-font-family: arial, sans-serif;
-border-collapse: collapse;
-width: 100%;
+    font-family: arial, sans-serif;
+    border-collapse: collapse;
+    width: 100%;
 }
 td, th {
-border: 1px solid #dddddd;
-text-align: left;
-padding: 8px;
+    border: 1px solid #dddddd;
+    text-align: left;
+    padding: 8px;
 }
 tr:nth-child(even) {
-background-color: #dddddd;
+    background-color: #dddddd;
 }
 #map {
     height: 100px;
@@ -511,26 +518,22 @@ background-color: #dddddd;
 }
 </style>
 
-<body  background="../images/background-index.png">
+<body"""
+        if settings['bg_index']:
+            rep_ini += " background=\"." + settings['bg_index'] + "\""
+        rep_ini += """>
     <!-- Fixed navbar -->
-        <div class="containerindex theme-showcase">"""
-        if logo:
+    <div class="containerindex theme-showcase">"""
+        if settings['logo']:
             rep_ini += """
-            <h1 align="left"><img src=.""" + logo + """ height="128" width="128" align="center">&nbsp;""" + company + """</h1>"""
+        <h1 align="left"><img src=".""" + settings['logo'] + "\" height=\"" + settings['logo_height'] + "\" align=\"center\">&nbsp;" + settings['company'] + "</h1>"
         rep_ini += """
-            <h2 align=center> Chats List </h2>
-            <div class="header">
-                <table style="width:100%">""" + obj + """
-                </table>
-            </div>
+        <h2 align=center>Chats List</h2>
+        <div class="header">
+            <table style="width:100%">""" + obj + """
+            </table>
         </div>
-<!-- /container -->
-<!-- Bootstrap core JavaScript
-    ================================================== -->
-<!-- Placed at the end of the document so the pages load faster -->
-<script src="https://code.jquery.com/jquery-1.10.2.min.js"></script>
-<script src="dist/js/bootstrap.min.js"></script>
-<script src="docs-assets/js/holder.js"></script>
+    </div><!-- /containerindex -->
 </body>
 </html>"""
 
@@ -543,7 +546,7 @@ background-color: #dddddd;
 
 
 def reply(id):
-    """ Function look out answer messages """
+    """Function look out answer messages"""
     sql_reply_str = "SELECT key_remote_jid, key_from_me, key_id, status, data, timestamp, media_url, media_mime_type, media_wa_type, media_size, media_name, media_caption, media_duration, latitude, longitude, " \
                 "remote_resource, edit_version, thumb_image, recipient_count, raw_data, starred, quoted_row_id, forwarded FROM messages_quotes WHERE _id = " + str(id)
     sql_answer = cursor_rep.execute(sql_reply_str)
@@ -554,27 +557,27 @@ def reply(id):
         if (str(rep[0]).split('@'))[1] == "g.us":
             if int(rep[1]) == 1:  # I post a message in a group
                 if report_var == 'EN':
-                    reply_msj = "<font color=\"#FF0000\" > Me </font>"
+                    reply_msj = "<font color=\"#FF0000\">Me</font>"
                 elif report_var == 'ES':
-                    reply_msj = "<font color=\"#FF0000\" > Yo </font>"
+                    reply_msj = "<font color=\"#FF0000\">Yo</font>"
                 else:
                     ans = "Me"
             elif int(rep[1]) == 0:  # Somebody post a message in a group
                 if (report_var == 'EN') or (report_var == 'ES'):
-                    reply_msj = "<font color=\"#FF0000\" > " + (str(rep[15]).split('@'))[0] + gets_name(rep[15]) + " </font>"
+                    reply_msj = "<font color=\"#FF0000\">" + (str(rep[15]).split('@'))[0] + gets_name(rep[15]) + "</font>"
                 else:
                     ans = (str(rep[15]).split('@'))[0] + gets_name(rep[15])
         elif (str(rep[0]).split('@'))[1] == "s.whatsapp.net":
             if int(rep[1]) == 1:  # I send message to somebody
                 if report_var == 'EN':
-                    reply_msj = "<font color=\"#FF0000\" > Me </font>"
+                    reply_msj = "<font color=\"#FF0000\">Me</font>"
                 elif report_var == 'ES':
-                    reply_msj = "<font color=\"#FF0000\" > Yo </font>"
+                    reply_msj = "<font color=\"#FF0000\">Yo</font>"
                 else:
                     ans = "Me"
             elif int(rep[1]) == 0:  # Someone sends me a message
                 if (report_var == 'EN') or (report_var == 'ES'):
-                    reply_msj = "<font color=\"#FF0000\" > " + (str(rep[0]).split('@'))[0] + gets_name(rep[0]) + " </font>"
+                    reply_msj = "<font color=\"#FF0000\">" + (str(rep[0]).split('@'))[0] + gets_name(rep[0]) + "</font>"
                 else:
                     ans = (str(rep[0]).split('@'))[0] + gets_name(rep[0])
         elif str(rep[0]) == "status@broadcast":
@@ -582,22 +585,22 @@ def reply(id):
                 distutils.dir_util.mkpath("./Media/.Statuses")
                 if int(rep[1]) == 1:  # I post a Status
                     if report_var == 'EN':
-                        reply_msj = "<font color=\"#FF0000\" > Me </font>"
+                        reply_msj = "<font color=\"#FF0000\">Me</font>"
                     elif report_var == 'ES':
-                        reply_msj = "<font color=\"#FF0000\" > Yo </font>"
+                        reply_msj = "<font color=\"#FF0000\">Yo</font>"
                     else:
                         ans = "Me"
                 elif int(rep[1]) == 0:  # Somebody posts a Status
                     if (report_var == 'EN') or (report_var == 'ES'):
-                        reply_msj = "<font color=\"#FF0000\" > " + (str(rep[15]).split('@'))[0] + gets_name(rep[15]) + " </font>"
+                        reply_msj = "<font color=\"#FF0000\">" + (str(rep[15]).split('@'))[0] + gets_name(rep[15]) + "</font>"
                     else:
                         ans = (str(rep[15]).split('@'))[0] + gets_name(rep[15])
 
         if rep[22] and int(rep[22]) > 0:  # Forwarded
             if report_var == 'EN':
-                reply_msj += "<br><font color=\"#8b8878\" > &#10150; Forwarded</font>"
+                reply_msj += "<br><font color=\"#8b8878\">&#10150; Forwarded</font>"
             elif report_var == 'ES':
-                reply_msj += "<br><font color=\"#8b8878\" > &#10150; Reenviado</font>"
+                reply_msj += "<br><font color=\"#8b8878\">&#10150; Reenviado</font>"
             else:
                 ans += Fore.RED + " - Forwarded" + Fore.RESET
 
@@ -631,7 +634,7 @@ def reply(id):
                 else:
                     ans += Fore.RED + " - Name: " + Fore.RESET + thumb + "\n"
             if (report_var == 'EN') or (report_var == 'ES'):
-                reply_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "' width=\"100\" height=\"100\"/></a>"
+                reply_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\">" + html_preview_file(thumb) + "</a>"
 
         elif int(rep[8]) == 2:  # media_wa_type 2, Audio
             chain = rep[17].split(b'\x77\x02')[0]
@@ -678,7 +681,7 @@ def reply(id):
                     ans += Fore.RED + " - Name: " + Fore.RESET + thumb + "\n"
             if (report_var == 'EN') or (report_var == 'ES'):
                 reply_msj += " " + size_file(rep[9]) + " - " + duration_file(rep[12])
-                reply_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + ".jpg" + "' width=\"100\" height=\"100\"/></a>"
+                reply_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\">" + html_preview_file(thumb + ".jpg") + "</a>"
             else:
                 ans += Fore.RED + "Type: " + Fore.RESET + rep[7] + Fore.RED + " - Size: " + Fore.RESET + str(rep[9]) + " bytes " + size_file(rep[9]) + Fore.RED + " - Duration: " + Fore.RESET + duration_file(rep[12]) + "\n"
 
@@ -755,7 +758,7 @@ def reply(id):
                 else:
                     ans += Fore.RED + "Type: " + Fore.RESET + rep[7] + Fore.RED + " - Size: " + Fore.RESET + str(rep[9]) + " bytes " + size_file(rep[9]) + "\n"
             if (report_var == 'EN') or (report_var == 'ES'):
-                reply_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + ".jpg' width=\"100\" height=\"100\"/></a>"
+                reply_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\">" + html_preview_file(thumb + ".jpg") + "</a>"
 
         elif int(rep[8]) == 10:  # media_wa_type 10, Video/Audio call lost
             if report_var == 'EN':
@@ -797,7 +800,7 @@ def reply(id):
                     ans += Fore.RED + " - Name: " + Fore.RESET + thumb + "\n"
 
             if (report_var == 'EN') or (report_var == 'ES'):
-                reply_msj += " - Gif - " + size_file(rep[9]) + " " + duration_file(rep[12]) + "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + ".jpg" + "' width=\"100\" height=\"100\"/></a>"
+                reply_msj += " - Gif - " + size_file(rep[9]) + " " + duration_file(rep[12]) + "<br> <a href=\"." + thumb + "\" target=\"_blank\">" + html_preview_file(thumb + ".jpg") + "</a>"
             else:
                 ans += Fore.RED + "Type: " + Fore.RESET + "Gif" + Fore.RED + " - Size: " + Fore.RESET + str(rep[9]) + " bytes " + size_file(rep[9]) + Fore.RED + " - Duration: " + Fore.RESET + duration_file(rep[12]) + "\n"
 
@@ -854,7 +857,7 @@ def reply(id):
                 thumb = (b"./" + chain[i:b]).decode('UTF-8', 'ignore')
 
             if (report_var == 'EN') or (report_var == 'ES'):
-                reply_msj += "<br>" + "Sticker - " + size_file(rep[9]) + "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "' width=\"100\" height=\"100\"/></a>"
+                reply_msj += "<br>" + "Sticker - " + size_file(rep[9]) + "<br> <a href=\"." + thumb + "\" target=\"_blank\">" + html_preview_file(thumb) + "</a>"
             else:
                 ans += Fore.RED + " - Type: " + Fore.RESET + "Sticker" + Fore.RED + " - Size: " + Fore.RESET + str(rep[9]) + " bytes " + size_file(rep[9]) + Fore.RED + "\n"
 
@@ -870,7 +873,7 @@ def reply(id):
 
 
 def messages(consult, rows, report_html):
-    """ Function that show database messages """
+    """Function that show database messages"""
     try:
         n_mes = 0
         rep_med = ""  # Saves the complete chat
@@ -1051,7 +1054,8 @@ def messages(consult, rows, report_html):
 
                                     if (report_var == 'EN') or (report_var == 'ES'):
                                         report_msj += "<br>./Media/WhatsApp Profile Pictures/" + (data[0].split('@'))[0] + "-" + str(data[2]) + ".jpg"
-                                        report_msj += "<br><a href=\"../Media/WhatsApp Profile Pictures/" + (data[0].split('@'))[0] + "-" + str(data[2]) + ".jpg\" target=\"_blank\"> <IMG SRC=\"../Media/WhatsApp Profile Pictures/" +  (data[0].split('@'))[0] + "-" + str(data[2]) + ".jpg\" width=\"100\" height=\"100\"/></a>"
+                                        report_msj += "<br><a href=\"../Media/WhatsApp Profile Pictures/" + (data[0].split('@'))[0] + "-" + str(data[2]) + ".jpg\" target=\"_blank\">" + \
+                                            html_preview_file("./Media/WhatsApp Profile Pictures/" +  (data[0].split('@'))[0] + "-" + str(data[2]) + ".jpg") + "</a>"
                                     else:
                                         message += "Thumbnail stored on local path './Media/WhatsApp Profile Pictures/" + (data[0].split('@'))[0] + "-" + ".jpg'\n"
 
@@ -1211,15 +1215,15 @@ def messages(consult, rows, report_html):
                         else:
                             if data[24] and int(data[24]) > 0:  # Forwarded
                                 if report_var == 'EN':
-                                    report_msj += "<font color=\"#8b8878\" >&#10150; Forwarded</font><br>"
+                                    report_msj += "<font color=\"#8b8878\">&#10150; Forwarded</font><br>"
                                 elif report_var == 'ES':
-                                    report_msj += "<font color=\"#8b8878\" >&#10150; Reenviado</font><br>"
+                                    report_msj += "<font color=\"#8b8878\">&#10150; Reenviado</font><br>"
                                 else:
                                     message += Fore.GREEN + "Forwarded " + Fore.RESET + "\n"
 
                             if data[21] and int(data[21]) > 0:  # Reply
                                 if (report_var == 'EN') or (report_var == 'ES'):
-                                    report_msj = "<p style=\"border-left: 6px solid blue; background-color: lightgrey;border-radius:5px;\"; > " + \
+                                    report_msj = "<p style=\"border-left: 6px solid blue; background-color: lightgrey;border-radius:5px;\";>" + \
                                                  reply(data[21])[1] + "</p>"
                                 else:
                                     message += Fore.RED + "Replying to: " + Fore.RESET + reply(data[21])[0] + "\n"
@@ -1274,7 +1278,7 @@ def messages(consult, rows, report_html):
                                 message += "Thumbnail was saved on local path '" + thumb + "'\n"
 
                         if (report_var == 'EN') or (report_var == 'ES'):
-                            report_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "' width=\"100\" height=\"100\"/></a>"
+                            report_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\">" + html_preview_file(thumb) + "</a>"
 
                     elif int(data[8]) == 2:  # media_wa_type 2, Audio
                         chain = data[17].split(b'\x77\x02')[0]
@@ -1349,7 +1353,7 @@ def messages(consult, rows, report_html):
                                 message += "Thumbnail for video '" + thumb + "' was saved on local path '" + thumb + ".jpg" + "'\n"
 
                         if (report_var == 'EN') or (report_var == 'ES'):
-                            report_msj += "<br/> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + ".jpg" + "' width=\"100\" height=\"100\"/></a>"
+                            report_msj += "<br/> <a href=\"." + thumb + "\" target=\"_blank\">" + html_preview_file(thumb + ".jpg") + "</a>"
 
                     elif int(data[8]) == 4:  # media_wa_type 4, Contact
                         if report_var == 'EN':
@@ -1442,7 +1446,7 @@ def messages(consult, rows, report_html):
                                 message += "Thumbnail was saved on local path '" + thumb + ".jpg'\n"
 
                         if (report_var == 'EN') or (report_var == 'ES'):
-                            report_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + ".jpg' width=\"100\" height=\"100\"/></a>"
+                            report_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\">" + html_preview_file(thumb + ".jpg") + "</a>"
 
                     elif int(data[8]) == 10:  # media_wa_type 10, Video/Audio call lost
                         if report_var == 'EN':
@@ -1518,7 +1522,7 @@ def messages(consult, rows, report_html):
                                 message += "Thumbnail for video '" + thumb + "' was saved on local path '" + thumb + ".jpg" + "'\n"
 
                         if (report_var == 'EN') or (report_var == 'ES'):
-                            report_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + ".jpg" + "' width=\"100\" height=\"100\"/></a>"
+                            report_msj += "<br> <a href=\"." + thumb + "\" target=\"_blank\">" + html_preview_file(thumb + ".jpg") + "</a>"
 
                     elif int(data[8]) == 14:  # media_wa_type 14  Vcard multiples
                         concat = ""
@@ -1575,7 +1579,7 @@ def messages(consult, rows, report_html):
                             thumb = (b"./" + chain[i:b]).decode('UTF-8', 'ignore')
 
                         if (report_var == 'EN') or (report_var == 'ES'):
-                            report_msj += " Sticker - " + size_file(data[9]) + "<br> <a href=\"." + thumb + "\" target=\"_blank\"> <IMG SRC='." + thumb + "' width=\"100\" height=\"100\"/></a>"
+                            report_msj += " Sticker - " + size_file(data[9]) + "<br> <a href=\"." + thumb + "\" target=\"_blank\">" + html_preview_file(thumb) + "</a>"
                         else:
                             message += Fore.GREEN + "Type: " + Fore.RESET + "Sticker" + Fore.GREEN + " - Size: " + Fore.RESET + str(data[9]) + " bytes " + size_file(data[9]) + Fore.GREEN + "\n"
 
@@ -1629,11 +1633,11 @@ def messages(consult, rows, report_html):
             report(rep_med, report_html)
 
     except Exception as e:
-        print("\nAn error occurred connecting to the database", e)
+        print("\nAn error occurred connecting to the database:", e)
 
 
 def info(opt):
-    """ Function that show info """
+    """Function that shows info"""
     if opt == '1':  # Status
         print(Fore.RED + "Status" + Fore.RESET)
         rep_med = ""
@@ -1647,7 +1651,7 @@ def info(opt):
         result = cursor.fetchone()
         print("Number of messages: {}".format(str(result[0])))
         sql_consult = cursor.execute(sql_string)
-        report_html = "./reports/report_status.html"
+        report_html = "./reports/" + settings['prefix'] + "status.html"
         messages(sql_consult, result[0], report_html)
         print("[i] Finished")
 
@@ -1756,7 +1760,7 @@ def info(opt):
                 print(message)
 
         if report_var != "None":
-            report_html = "./reports/report_calls.html"
+            report_html = "./reports/" + settings['prefix'] + "calls.html"
             print("[+] Creating report ...")
             report(rep_med, report_html)
         print("\n[i] Finished")
@@ -1774,23 +1778,18 @@ def info(opt):
 
 
 def get_configs():
-    """ Function that gets report config"""
-    global logo, company, record, unit, examiner, notes
-    config_report = ConfigParser()
+    """Function that gets report config"""
     try:
-        config_report.read('./cfg/settings.cfg')
-        logo = config_report.get('report', 'logo')
-        company = config_report.get('report', 'company')
-        record = config_report.get('report', 'record')
-        unit = config_report.get('report', 'unit')
-        examiner = config_report.get('report', 'examiner')
-        notes = config_report.get('report', 'notes')
+        # Create the settings file if it does not exist.
+        whautils.create_settings_file()
+        # Read the settings from the settings file.
+        settings = whautils.read_settings_file()
     except Exception as e:
-        print("The 'settings.cfg' file is missing or corrupt! Error: " + str(e))
+        print("The file `{0:s}' is missing or corrupt! Error: ".format(whautils.settingsFile) + str(e))
 
 
 def extract(obj, total):
-    """ Functions that extracts thumbnails"""
+    """Function that extracts thumbnails"""
     i = 1
     for data in obj:
         try:
@@ -1952,12 +1951,12 @@ if __name__ == "__main__":
                     sql_string += " AND (messages.key_remote_jid LIKE '%" + str(args.user_all) + "%@s.whatsapp.net' OR messages.remote_resource LIKE '%" + str(args.user_all) + "%')"
                     sql_count += " AND (messages.key_remote_jid LIKE '%" + str(args.user_all) + "%@s.whatsapp.net' OR messages.remote_resource LIKE '%" + str(args.user_all) + "%')"
                     arg_user = args.user_all
-                    report_html = "./reports/report_user_all_" + args.user_all + ".html"
+                    report_html = "./reports/" + settings['prefix'] + "user_all_" + args.user_all + ".html"
 
                 elif args.user:
                     sql_string += " AND messages.key_remote_jid LIKE '%" + str(args.user) + "%@s.whatsapp.net'"
                     sql_count += " AND messages.key_remote_jid LIKE '%" + str(args.user) + "%@s.whatsapp.net'"
-                    report_html = "./reports/report_user_chat_" + args.user + ".html"
+                    report_html = "./reports/" + settings['prefix'] + "user_chat_" + args.user + ".html"
                     arg_user = args.user
 
                 elif args.group:
@@ -1965,10 +1964,10 @@ if __name__ == "__main__":
                     sql_count += " AND messages.key_remote_jid LIKE '%" + str(args.group) + "%'"
                     arg_group = args.group
                     if arg_group.split("@")[1] == "g.us":
-                        report_html = "./reports/report_group_chat_" + args.group + ".html"
+                        report_html = "./reports/" + settings['prefix'] + "group_chat_" + args.group + ".html"
                         report_group, color = participants(args.group)
                     else:
-                        report_html = "./reports/report_broadcast_chat_" + args.group + ".html"
+                        report_html = "./reports/" + settings['prefix'] + "broadcast_chat_" + args.group + ".html"
                         report_group, color = participants(args.group)
 
                 elif args.all:
@@ -1979,7 +1978,7 @@ if __name__ == "__main__":
                     for i in sql_consult_chat:
                         chats_live.append(i[0])
                     report_med = ""
-                    report_med_newline = "\n                    "
+                    report_med_newline = "\n                "
                     print("Loading data ...")
                     for i in chats_live:
                         sql_string_copy = sql_string
@@ -1988,11 +1987,11 @@ if __name__ == "__main__":
                         if i.split('@')[1] == "g.us":
                             report_med += report_med_newline
                             if report_var == 'EN':
-                                report_html = "./reports/report_group_chat_" + i + ".html"
-                                report_med += "<tr><th>Group</th><th><a href=\"report_group_chat_" + i + ".html" + "\" target=\"_blank\"> " + i + gets_name(i) + "</a></th></tr>"
+                                report_html = "./reports/" + settings['prefix'] + "group_chat_" + i + ".html"
+                                report_med += "<tr><th>Group</th><th><a href=\"" + settings['prefix'] + "group_chat_" + i + ".html" + "\" target=\"_blank\">" + i + gets_name(i) + "</a></th></tr>"
                             elif report_var == 'ES':
-                                report_html = "./reports/report_group_chat_" + i + ".html"
-                                report_med += "<tr><th>Grupo</th><th><a href=\"report_group_chat_" + i + ".html" + "\" target=\"_blank\"> " + i + gets_name(i) + "</a></th></tr>"
+                                report_html = "./reports/" + settings['prefix'] + "group_chat_" + i + ".html"
+                                report_med += "<tr><th>Grupo</th><th><a href=\"" + settings['prefix'] + "group_chat_" + i + ".html" + "\" target=\"_blank\">" + i + gets_name(i) + "</a></th></tr>"
                             sql_string_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
                             sql_count_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
                             arg_group = i
@@ -2007,11 +2006,11 @@ if __name__ == "__main__":
                         elif i.split('@')[1] == "s.whatsapp.net":
                             report_med += report_med_newline
                             if report_var == 'EN':
-                                report_med += "<tr><th>User</th><th><a href=\"report_user_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\"> " + i.split('@')[0] + gets_name(i) + "</a></th></tr>"
-                                report_html = "./reports/report_user_chat_" + i.split('@')[0] + ".html"
+                                report_med += "<tr><th>User</th><th><a href=\"" + settings['prefix'] + "user_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\">" + i.split('@')[0] + gets_name(i) + "</a></th></tr>"
+                                report_html = "./reports/" + settings['prefix'] + "user_chat_" + i.split('@')[0] + ".html"
                             elif report_var == 'ES':
-                                report_med += "<tr><th>Usuario</th><th><a href=\"report_user_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\"> " + i.split('@')[0] + gets_name(i) + "</a></th></tr>"
-                                report_html = "./reports/report_user_chat_" + i.split('@')[0] + ".html"
+                                report_med += "<tr><th>Usuario</th><th><a href=\"" + settings['prefix'] + "user_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\">" + i.split('@')[0] + gets_name(i) + "</a></th></tr>"
+                                report_html = "./reports/" + settings['prefix'] + "user_chat_" + i.split('@')[0] + ".html"
                             sql_string_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
                             sql_count_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
                             arg_group = ""
@@ -2026,11 +2025,11 @@ if __name__ == "__main__":
                         elif i.split('@')[1] == "broadcast":
                             report_med += report_med_newline
                             if report_var == 'EN':
-                                report_med += "<tr><th>Broadcast</th><th><a href=\"report_broadcast_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\"> " + i + gets_name(i) + "</a></th></tr>"
-                                report_html = "./reports/report_broadcast_chat_" + i.split('@')[0] + ".html"
+                                report_med += "<tr><th>Broadcast</th><th><a href=\"" + settings['prefix'] + "broadcast_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\">" + i + gets_name(i) + "</a></th></tr>"
+                                report_html = "./reports/" + settings['prefix'] + "broadcast_chat_" + i.split('@')[0] + ".html"
                             elif report_var == 'ES':
-                                report_med += "<tr><th>Difusión</th><th><a href=\"report_broadcast_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\"> " + i + gets_name(i) + "</a></th></tr>"
-                                report_html = "./reports/report_broadcast_chat_" + i.split('@')[0] + ".html"
+                                report_med += "<tr><th>Difusión</th><th><a href=\"" + settings['prefix'] + "broadcast_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\">" + i + gets_name(i) + "</a></th></tr>"
+                                report_html = "./reports/" + settings['prefix'] + "broadcast_chat_" + i.split('@')[0] + ".html"
                             sql_string_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
                             sql_count_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
                             arg_group = ""

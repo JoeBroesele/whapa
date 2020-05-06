@@ -1,6 +1,7 @@
 #!/usr/bin/env python3
 
 import os
+import sys
 import time
 import webbrowser
 import requests
@@ -9,15 +10,20 @@ from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
 
+# Append library folder to Python path.
+sys.path.append(os.path.relpath(os.path.join(os.path.dirname(__file__), 'libs')))
+
+import whautils
+
 """ Global vars"""
 author = 'B16f00t'
 title = 'WhatsApp Parser Toolset'
 contact = "http://t.me/b16f00t"
-version = '1.15'
+version = '1.16'
 system = ""
 
 class ToolTip(object):
-    """ Create a tooltip for a given widget """
+    """Create a tooltip for a given widget"""
 
     def __init__(self, widget, text='widget info'):
         self.widget = widget
@@ -492,7 +498,7 @@ class Whapa:
 
         self.label_box_whagodri_info = Label(self.tab4, image=self.iconabout)
         self.label_box_whagodri_info.grid(row=0, column=3, padx=5, pady=5)
-        ToolTip(self.label_box_whagodri_info, "1. Disable 2FA in your Google Account.\n2. Install the requirements.\n3. Edit the values of the./cfg/settings.cfg file.\n    [auth]\n        gmail = alias@gmail.com\n        passw = yourpassword\n        devid = Device ID (optional)\n        celnumbr = BackupPhoneNumber (ex. 3466666666666, [Country Code] + Phone Number)\n4. Click here (log into your browser and then allow access to your Google account).")
+        ToolTip(self.label_box_whagodri_info, "1. Disable 2FA in your Google Account.\n2. Install the requirements.\n3. Edit the values of the ./cfg/settings.cfg file.\n    [auth]\n        gmail = alias@gmail.com\n        passw = yourpassword\n        devid = Device ID (optional)\n        celnumbr = BackupPhoneNumber (ex. 3466666666666, [Country Code] + Phone Number)\n4. Click here (log into your browser and then allow access to your Google account).")
 
         # Status Bar
         self.label_status.set(time.strftime("%d-%m-%Y %H:%M"))
@@ -519,12 +525,12 @@ class Whapa:
         self.entry_whapa_te.config(fg='grey')
 
         """Check if there is a new version"""
-        request = requests.get("https://github.com/B16f00t/whapa")
+        request = requests.get("https://github.com/JoeBroesele/whapa")
         update = (request.text.split('itemprop="about">')[1]).split("</span>")[0].strip("\n ")
         current_version = "{} v{}".format(title, version)
-        if update != current_version:
+        if update > current_version:
             messagebox.showinfo("Update", "New version available\n{}".format(update))
-            webbrowser.open_new_tab("https://github.com/B16f00t/whapa")
+            webbrowser.open_new_tab("https://github.com/JoeBroesele/whapa")
 
         self.root.mainloop()
 
@@ -557,9 +563,9 @@ class Whapa:
     def api(self):
         """Open settings file"""
         if system == "Linux":
-            os.system('xdg-open ./cfg/settings.cfg')
+            os.system('xdg-open ' + whautils.settingsFile)
         else:
-            os.system('start ./cfg/settings.cfg')
+            os.system('start ' + whautils.settingsFile)
 
     def manual(self):
         """Open the manual"""
@@ -1004,10 +1010,7 @@ class Whapa:
 
 if __name__ == '__main__':
     """Initialize"""
-    if os.path.isfile('./cfg/settings.cfg') is False:
-        """ Function that creates the settings file """
-        with open('./cfg/settings.cfg', 'w') as cfg:
-            cfg.write('[report]\nlogo = ./cfg/logo.png\ncompany =\nrecord =\nunit =\nexaminer =\nnotes =\n\n[auth]\ngmail = alias@gmail.com\npassw = yourpassword\ndevid = 1234567887654321\ncelnumbr = BackupPhoneNunmber\n\n[app]\npkg = com.whatsapp\nsig = 38a0f7d505fe18fec64fbf343ecaaaf310dbd799\n\n[client]\npkg = com.google.android.gms\nsig = 38918a453d07199354f8b19af05ec6562ced5788\nver = 9877000')
+    whautils.create_settings_file()
 
     error_icon = False
     img_folder = os.getcwd() + os.sep + "images" + os.sep

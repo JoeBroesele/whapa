@@ -4,7 +4,7 @@
 
 WhatsApp Parser Toolset
 ====
-Updated: Apr 2020
+Updated: May 2020
 
 WhatsApp Messenger Version 2.19.244
 
@@ -80,11 +80,15 @@ To create reports the first thing we need to do is to configure the file"./cfg/s
 
     [report]
     logo =./cfg/logo.png
+    logo_height = 128
     company = Foo S.L
     record = 1337
     unit = Research group
     examiner = B16f00t
     notes = Chat maintained between the murderer and the victim
+    prefix = report_
+    bg_index = ./images/background-index.png
+    bg_report = ./images/background.png
 
 Here we must put our company logo, company or unit name, as well as the assigned registration number, unit or group where we belong, who is the examiner and we can also specify notes on the report.
 
@@ -92,12 +96,12 @@ Hints:
 * By leaving ```logo``` blank, the logo and company name will be omitted from the reports.
 * By leaving ```record```, ```unit```, ```examiner``` and ```notes``` blank, the header table will be omitted from the reports.
 
-To generate the report we must specify the option "English" whether we want the report in English, as well as "ES" whether we want the report in Spanish.
+To generate the report we must specify the option "English" if we want the report in English, or "Spanish" if we want the report in Spanish.
 
 If you copy the "wa.db" database into the same directory as the script, the phone number will be displayed along with the name.
 For the report to contains the images, videos, documents... you must copy the "WhatsApp/Media" folder of your phone to the whapa directory, otherwise the program will generate thumbnails.
 
-If we want to print the document or create the report in pdf, It recommends in the print option -> scale the view <= 60% or 70%, otherwise the report will be displayed too large.
+If we want to print the document or create the report in pdf, it is recommended to set the print option -> scale the view <= 60% or 70%, otherwise the report will be displayed too large.
 
 
 WHAMERGE
