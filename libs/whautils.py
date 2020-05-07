@@ -4,7 +4,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 05 May 2020
-# Rev.: 06 May 2020
+# Rev.: 07 May 2020
 #
 # Utility library for the WhatsApp Parser Toolset.
 #
@@ -18,31 +18,37 @@ from configparser import ConfigParser
 # Define global variables.
 settings = {
     # Section 'report'.
-    "logo":             "",
-    "logo_height":      "",
-    "record":           "",
-    "unit":             "",
-    "examiner":         "",
-    "notes":            "",
-    "prefix":           "",
-    "bg_index":         "",
-    "bg_report":        "",
-    "preview_pics_size":"",
+    "logo":                     "",
+    "logo_height":              "",
+    "record":                   "",
+    "unit":                     "",
+    "examiner":                 "",
+    "notes":                    "",
+    "prefix":                   "",
+    "bg_index":                 "",
+    "bg_report":                "",
+    "preview_pics_size":        "",
+    "profile_pics_enable":      "",
+    "profile_pics_size_report": "",
+    "profile_pics_size_index":  "",
+    "profile_pics_dir":         "",
+    "profile_pic_user":         "",
+    "profile_pic_group":        "",
     # Section 'auth'.
-    "gmail":            "",
-    "passw":            "",
-    "devid":            "",
-    "celnumbr":         "",
+    "gmail":                    "",
+    "passw":                    "",
+    "devid":                    "",
+    "celnumbr":                 "",
     # Section 'app'.
-    "pkg":              "",
-    "sig":              "",
+    "pkg":                      "",
+    "sig":                      "",
     # Section 'client'.
-    "client_pkg":       "",
-    "client_sig":       "",
-    "client_ver":       ""
+    "client_pkg":               "",
+    "client_sig":               "",
+    "client_ver":               ""
 }
 prefixError = "ERROR: "
-settingsFile = os.path.dirname(__file__) + "/../cfg/settings.cfg".replace("/", os.path.sep)
+settingsFile = os.path.relpath(os.path.dirname(__file__) + "/../cfg/settings.cfg".replace("/", os.path.sep))
 
 
 
@@ -63,6 +69,12 @@ prefix = report_
 bg_index = ./images/background-index.png
 bg_report = ./images/background.png
 preview_pics_size = 100
+profile_pics_enable = no
+profile_pics_size_report = 128
+profile_pics_size_index = 48
+profile_pics_dir = ./Media/Profile Pictures/
+profile_pic_user = ./images/profile-pic-user.jpg
+profile_pic_group = ./images/profile-pic-group.jpg
 
 [auth]
 gmail = alias@gmail.com
@@ -95,32 +107,48 @@ def read_settings_file():
         config = ConfigParser()
         config.read(settingsFile)
         # Section 'report'.
-        settings['logo']                = config.get('report', 'logo')
-        settings['logo_height']         = config.get('report', 'logo_height')
-        settings['company']             = config.get('report', 'company')
-        settings['record']              = config.get('report', 'record')
-        settings['unit']                = config.get('report', 'unit')
-        settings['examiner']            = config.get('report', 'examiner')
-        settings['notes']               = config.get('report', 'notes')
-        settings['prefix']              = config.get('report', 'prefix')
-        settings['bg_index']            = config.get('report', 'bg_index')
-        settings['bg_report']           = config.get('report', 'bg_report')
-        settings['preview_pics_size']   = config.get('report', 'preview_pics_size')
+        settings['logo']                    = config.get('report', 'logo')
+        settings['logo_height']             = config.get('report', 'logo_height')
+        settings['company']                 = config.get('report', 'company')
+        settings['record']                  = config.get('report', 'record')
+        settings['unit']                    = config.get('report', 'unit')
+        settings['examiner']                = config.get('report', 'examiner')
+        settings['notes']                   = config.get('report', 'notes')
+        settings['prefix']                  = config.get('report', 'prefix')
+        settings['bg_index']                = config.get('report', 'bg_index')
+        settings['bg_report']               = config.get('report', 'bg_report')
+        settings['preview_pics_size']       = config.get('report', 'preview_pics_size')
+        settings['profile_pics_enable']     = config.get('report', 'profile_pics_enable')
+        settings['profile_pics_size_report']= config.get('report', 'profile_pics_size_report')
+        settings['profile_pics_size_index'] = config.get('report', 'profile_pics_size_index')
+        settings['profile_pics_dir']        = config.get('report', 'profile_pics_dir')
+        settings['profile_pic_user']        = config.get('report', 'profile_pic_user')
+        settings['profile_pic_group']       = config.get('report', 'profile_pic_group')
         # Section 'auth'.
-        settings['gmail']               = config.get('auth', 'gmail')
-        settings['passw']               = config.get('auth', 'passw')
-        settings['devid']               = config.get('auth', 'devid')
-        settings['celnumbr']            = config.get('auth', 'celnumbr').lstrip('+0')
+        settings['gmail']                   = config.get('auth', 'gmail')
+        settings['passw']                   = config.get('auth', 'passw')
+        settings['devid']                   = config.get('auth', 'devid')
+        settings['celnumbr']                = config.get('auth', 'celnumbr').lstrip('+0')
         # Section 'app'.
-        settings['pkg']                 = config.get('app', 'pkg')
-        settings['sig']                 = config.get('app', 'sig')
+        settings['pkg']                     = config.get('app', 'pkg')
+        settings['sig']                     = config.get('app', 'sig')
         # Section 'client'.
-        settings['client_pkg']          = config.get('client', 'pkg')
-        settings['client_sig']          = config.get('client', 'sig')
-        settings['client_ver']          = config.get('client', 'ver')
+        settings['client_pkg']              = config.get('client', 'pkg')
+        settings['client_sig']              = config.get('client', 'sig')
+        settings['client_ver']              = config.get('client', 'ver')
 
         return settings
     except Exception as e:
         print(prefixError + "The settings file `{0:s}' is missing or corrupt! Error: ".format(settingsFile) + str(e))
         sys.exit(1)
+
+
+
+def check_google_password():
+    """Function to check if the Google password is valid."""
+    read_settings_file()
+    password = settings['passw']
+    if not password or password == 'yourpassword':
+        return False
+    return True
 

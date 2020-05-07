@@ -2,7 +2,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 28 Apr 2020
-# Rev.: 06 May 2020
+# Rev.: 07 May 2020
 #
 # List of files to be ignored by git.
 #
@@ -38,8 +38,11 @@ wa.db
 *.db
 *.crypt12
 
+# WhatsApp profile pictures.
+Profile Pictures/
+
 # PDF directory.
-/PDF/
+PDF/
 
 # Temporary directory.
 /tmp/

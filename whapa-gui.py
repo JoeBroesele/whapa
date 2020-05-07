@@ -4,26 +4,26 @@ import os
 import sys
 import time
 import webbrowser
-import requests
 from tkinter import *
 from tkinter import ttk
 from tkinter import messagebox
 from tkinter import filedialog
+import requests
 
 # Append library folder to Python path.
 sys.path.append(os.path.relpath(os.path.join(os.path.dirname(__file__), 'libs')))
 
 import whautils
 
-""" Global vars"""
+# Define global variables.
 author = 'B16f00t'
 title = 'WhatsApp Parser Toolset'
 contact = "http://t.me/b16f00t"
-version = '1.16'
+version = '1.17'
 system = ""
 
 class ToolTip(object):
-    """Create a tooltip for a given widget"""
+    """Create a tooltip for a given widget."""
 
     def __init__(self, widget, text='widget info'):
         self.widget = widget
@@ -52,10 +52,10 @@ class ToolTip(object):
 
 
 class Whapa:
-    """Menu Class"""
+    """WhatsApp Parser GUI class."""
 
     def __init__(self, img_folder, icons):
-        """ Defines windows, menu, submenus, shortcuts"""
+        """ Defines windows, menu, submenus, shortcuts."""
         self.img_folder = img_folder
         self.icons = icons
         self.root = Tk()
@@ -95,7 +95,7 @@ class Whapa:
         self.root.resizable(0, 0)
 
         # Variables
-        """ Function that gets report config"""
+        """ Function that gets report config."""
         self.wagodri_box_value = StringVar()
         self.whacipher_box_value = StringVar()
         self.label_status = StringVar()
@@ -183,7 +183,7 @@ class Whapa:
         self.note.add(self.tab4, text="Whagodri", image=self.icontabdrive, compound='left', padding=20)
         self.note.grid(row=2, padx=15, pady=15, sticky="we")
 
-        # Tab 1 Whapa
+        # Tab 1: Whapa
         self.label_whapa = Label(self.tab1, text="WhatsApp Parser", font=('courier', 15, 'bold'))
         self.label_whapa.grid(row=0, column=0, sticky="we", padx=5, pady=5, columnspan=2)
 
@@ -322,7 +322,7 @@ class Whapa:
         self.button_whapa_extract.grid(row=0, column=4, padx=5, pady=5)
         ToolTip(self.button_whapa_extract, "Extract Thumbnails")
 
-        # Tab 2 Whacipher
+        # Tab 2: Whacipher
         self.label_whacipher = Label(self.tab2, text="WhatsApp Encryption and Decryption", font=('courier', 15, 'bold'))
         self.label_whacipher.grid(row=0, column=0, sticky="we", padx=5, pady=5, columnspan=2)
 
@@ -333,7 +333,7 @@ class Whapa:
         self.notewhacipher.add(self.tabwhacipher2, text="Encrypt", compound='left', padding=20)
         self.notewhacipher.grid(row=1, padx=5, pady=5, sticky="we")
 
-            # Decrypt
+        # Decrypt
         self.whacipher_but_file = Radiobutton(self.tabwhacipher1, text='File', variable=self.whacipher_box_value, value='File', anchor="w", compound='left', command=self.estate_assets_whacipher)
         self.whacipher_but_file.config(bd=4, borderwidth=0, highlightthickness=0)
         self.whacipher_but_file.grid(row=0, column=0, padx=5, pady=5, sticky="nswe")
@@ -410,7 +410,7 @@ class Whapa:
         self.button_whacipher_en.grid(row=4, column=0, padx=10, pady=10, columnspan=2)
         ToolTip(self.button_whacipher_en, "Encrypt")
 
-        # Tab 3 Whamerge
+        # Tab 3: Whamerge
         self.label_whamerge = Label(self.tab3, text="WhatsApp Merger", font=('courier', 15, 'bold'))
         self.label_whamerge.grid(row=0, column=0, padx=5, pady=5, columnspan=5)
         self.frame_whamerge = LabelFrame(self.tab3)
@@ -440,7 +440,7 @@ class Whapa:
         self.label_box_whamerge_info.grid(row=0, column=3, padx=5, pady=5)
         ToolTip(self.label_box_whamerge_info, "The generated file is for analysis purposes, not for restoring on the phone,\n due to the fact that many tables have been omitted.")
 
-        # Tab 4 Whagodri
+        # Tab 4: Whagodri
         self.label_wagodri = Label(self.tab4, text="WhatsApp Google Drive Extractor", font=('courier', 15, 'bold'))
         self.label_wagodri.grid(row=0, column=0, columnspan=2, sticky="we", padx=5, pady=5)
 
@@ -512,7 +512,7 @@ class Whapa:
         self.label_bg.bind("<Button-1>", lambda event: webbrowser.open_new_tab("https://github.com/B16f00t/whapa"))
         self.label_box_whagodri_info.bind("<Button-1>", lambda event: webbrowser.open_new_tab("https://accounts.google.com/DisplayUnlockCaptcha"))
 
-        # Run GUI
+        # Launch the GUI.
         self.button_whacipher_path.config(state=DISABLED)
         self.entry_whacipher_path.config(state=DISABLED)
         self.entry_whapa_ts.insert(0, 'dd-mm-yyyy HH:MM')
@@ -524,15 +524,20 @@ class Whapa:
         self.entry_whapa_te.bind('<FocusOut>', self.on_focusout_out)
         self.entry_whapa_te.config(fg='grey')
 
-        """Check if there is a new version"""
-        request = requests.get("https://github.com/JoeBroesele/whapa")
-        update = (request.text.split('itemprop="about">')[1]).split("</span>")[0].strip("\n ")
-        current_version = "{} v{}".format(title, version)
-        if update > current_version:
-            messagebox.showinfo("Update", "New version available\n{}".format(update))
-            webbrowser.open_new_tab("https://github.com/JoeBroesele/whapa")
+        self.check_update()
 
         self.root.mainloop()
+
+    def check_update(self):
+        """Check if a new version is available."""
+        update_url = "https://github.com/JoeBroesele/whapa"
+        request = requests.get(update_url)
+        update = (request.text.split('itemprop="about">')[1]).split("</span>")[0].strip("\n ")
+        update_version = update.split(" ")[-1].lower().strip("v")
+        if update and update_version:
+            if update_version > version:
+                if messagebox.askquestion("Update Available", "New version available:\n{0:s}\n\nDo you want to visit the project web page {1:s}?".format(update, update_url)) == 'yes':
+                    webbrowser.open_new_tab(update_url)
 
     def on_entry_click(self, event):
         """function that gets called whenever entry is clicked"""
@@ -608,7 +613,7 @@ class Whapa:
             self.whapa_wa.set(self.path.replace("/", "\\"))
 
     def whapa_messages(self):
-        """ Run whapa message command"""
+        """Run whapa message command"""
         self.cmd = '-m "{}"'.format(self.whapa_file.get()).strip("\n")
         if self.whapa_wa.get():
             self.cmd += ' -wa "{}"'.format(self.whapa_wa.get()).strip("\n")
@@ -674,14 +679,14 @@ class Whapa:
             pass
 
         if system == "Linux":
-            exec = "python3 ./libs/whapa.py {}".format(self.cmd)
+            exec_cmd = "python3 ./libs/whapa.py {}".format(self.cmd)
         else:
-            exec = "python .\\libs\\whapa.py {}".format(self.cmd)
-        self.label_status.set(exec)
-        os.system(exec)
+            exec_cmd = "python .\\libs\\whapa.py {}".format(self.cmd)
+        self.label_status.set(exec_cmd)
+        os.system(exec_cmd)
 
     def whapa_extract(self):
-        """ Run whapa extract command"""
+        """Run whapa extract command"""
         self.cmd = '-e "{}"'.format(self.whapa_file.get()).strip("\n")
         if self.whapa_ts.get() == "1":
             self.cmd += ' -ts "{}"'.format(self.entry_whapa_ts.get()).strip("\n")
@@ -702,14 +707,14 @@ class Whapa:
             self.cmd += " -u {}".format(self.whapa_user.get()).strip("\n")
 
         if system == "Linux":
-            exec = "python3 ./libs/whapa.py {}".format(self.cmd)
+            exec_cmd = "python3 ./libs/whapa.py {}".format(self.cmd)
         else:
-            exec = "python .\\libs\\whapa.py {}".format(self.cmd)
-        self.label_status.set(exec)
-        os.system(exec)
+            exec_cmd = "python .\\libs\\whapa.py {}".format(self.cmd)
+        self.label_status.set(exec_cmd)
+        os.system(exec_cmd)
 
     def whapa_status(self):
-        """ Run whapa status command"""
+        """Run whapa status command"""
 
         self.cmd = '-i 1 -wa "{}"'.format(self.whapa_wa.get()).strip("\n")
         self.cmd += ' "{}"'.format(self.whapa_file.get()).strip("\n")
@@ -722,14 +727,14 @@ class Whapa:
             pass
 
         if system == "Linux":
-            exec = "python3 ./libs/whapa.py {}".format(self.cmd)
+            exec_cmd = "python3 ./libs/whapa.py {}".format(self.cmd)
         else:
-            exec = "python .\\libs\\whapa.py {}".format(self.cmd)
-        self.label_status.set(exec)
-        os.system(exec)
+            exec_cmd = "python .\\libs\\whapa.py {}".format(self.cmd)
+        self.label_status.set(exec_cmd)
+        os.system(exec_cmd)
 
     def whapa_call(self):
-        """ Run whapa call log command"""
+        """Run whapa call log command"""
 
         self.cmd = '-i 2 -wa "{}"'.format(self.whapa_wa.get()).strip("\n")
         self.cmd += ' "{}"'.format(self.whapa_file.get()).strip("\n")
@@ -751,14 +756,14 @@ class Whapa:
             pass
 
         if system == "Linux":
-            exec = "python3 ./libs/whapa.py {}".format(self.cmd)
+            exec_cmd = "python3 ./libs/whapa.py {}".format(self.cmd)
         else:
-            exec = "python .\\libs\\whapa.py {}".format(self.cmd)
-        self.label_status.set(exec)
-        os.system(exec)
+            exec_cmd = "python .\\libs\\whapa.py {}".format(self.cmd)
+        self.label_status.set(exec_cmd)
+        os.system(exec_cmd)
 
     def whapa_info(self):
-        """ Run whapa info command"""
+        """Run whapa info command"""
 
         self.cmd = '-i 3 -wa "{}"'.format(self.whapa_wa.get()).strip("\n")
         self.cmd += ' "{}"'.format(self.whapa_file.get()).strip("\n")
@@ -771,11 +776,11 @@ class Whapa:
             pass
 
         if system == "Linux":
-            exec = "python3 ./libs/whapa.py {}".format(self.cmd)
+            exec_cmd = "python3 ./libs/whapa.py {}".format(self.cmd)
         else:
-            exec = "python .\\libs\\whapa.py {}".format(self.cmd)
-        self.label_status.set(exec)
-        os.system(exec)
+            exec_cmd = "python .\\libs\\whapa.py {}".format(self.cmd)
+        self.label_status.set(exec_cmd)
+        os.system(exec_cmd)
 
     def estate_assets_whacipher(self):
         """Check that radiobutton is marked"""
@@ -807,7 +812,7 @@ class Whapa:
             except:
                 pass
 
-    def checkNumberOnly(self, action, value_if_allowed):
+    def check_number_only(self, action, value_if_allowed):
         """Check that only numbers are entered"""
         if action != '1':
             return True
@@ -896,11 +901,11 @@ class Whapa:
                 self.cmd += ' -d "{}"'.format(self.whacipher_key.get()).strip("\n")
                 self.cmd += ' -o "{}\\"'.format(self.whacipher_out.get()).strip("\n")
         if system == "Linux":
-            exec = "python3 ./libs/whacipher.py {}".format(self.cmd)
+            exec_cmd = "python3 ./libs/whacipher.py {}".format(self.cmd)
         else:
-            exec = "python .\\libs\\whacipher.py {}".format(self.cmd)
-        self.label_status.set(exec)
-        os.system(exec)
+            exec_cmd = "python .\\libs\\whacipher.py {}".format(self.cmd)
+        self.label_status.set(exec_cmd)
+        os.system(exec_cmd)
 
     def encrypt_whacypher(self):
         """Run encrypt command"""
@@ -909,11 +914,11 @@ class Whapa:
         self.cmd += ' -o "{}"'.format(self.whacipher_out_en.get()).strip("\n")
 
         if system == "Linux":
-            exec = "python3 ./libs/whacipher.py {}".format(self.cmd)
+            exec_cmd = "python3 ./libs/whacipher.py {}".format(self.cmd)
         else:
-            exec = "python .\\libs\\whacipher.py {}".format(self.cmd)
-        self.label_status.set(exec)
-        os.system(exec)
+            exec_cmd = "python .\\libs\\whacipher.py {}".format(self.cmd)
+        self.label_status.set(exec_cmd)
+        os.system(exec_cmd)
 
     def search_path_whamerge(self):
         """Search a path file to merge"""
@@ -935,11 +940,11 @@ class Whapa:
         """Run merge command"""
         self.cmd = "-o "
         if system == "Linux":
-            exec = 'python3 ./libs/whamerge.py "{}" {} "{}"'.format(self.whamerge_path.get(), self.cmd, self.whamerge_file.get())
+            exec_cmd = 'python3 ./libs/whamerge.py "{}" {} "{}"'.format(self.whamerge_path.get(), self.cmd, self.whamerge_file.get())
         else:
-            exec = 'python .\\libs\\whamerge.py  "{}\\" {} "{}"'.format(self.whamerge_path.get(), self.cmd, self.whamerge_file.get())
-        self.label_status.set(exec)
-        os.system(exec)
+            exec_cmd = 'python .\\libs\\whamerge.py  "{}\\" {} "{}"'.format(self.whamerge_path.get(), self.cmd, self.whamerge_file.get())
+        self.label_status.set(exec_cmd)
+        os.system(exec_cmd)
 
     def search_path_whagodri(self):
         """Search a path file to merge"""
@@ -987,12 +992,15 @@ class Whapa:
             else:
                 self.cmd += ' -o "{}\\"'.format(self.whagodri_path.get()).strip("\n")
 
+        if not whautils.check_google_password():
+            messagebox.showinfo("Google Password Entry", "Please enter your Google password at the console.\n\nAlternatively, set it in the file '{0:s}' and restart the application.".format(whautils.settingsFile))
+
         if system == "Linux":
-            exec = "python3 ./libs/whagodri.py {} ".format(self.cmd)
+            exec_cmd = "python3 ./libs/whagodri.py {} ".format(self.cmd)
         else:
-            exec = "python .\\libs\\whagodri.py {}".format(self.cmd)
-        self.label_status.set(exec)
-        os.system(exec)
+            exec_cmd = "python .\\libs\\whagodri.py {}".format(self.cmd)
+        self.label_status.set(exec_cmd)
+        os.system(exec_cmd)
 
     def open_folder(self):
         """Open current folder"""
@@ -1001,11 +1009,11 @@ class Whapa:
     def requirements(self):
         """Install dependencies"""
         if system == "Linux":
-            exec = "sudo pip3 install -r ./doc/requirements.txt"
+            exec_cmd = "sudo pip3 install -r ./doc/requirements.txt"
         else:
-            exec = "pip install -r ./doc/requirements.txt"
-        self.label_status.set(exec)
-        os.system(exec)
+            exec_cmd = "pip install -r ./doc/requirements.txt"
+        self.label_status.set(exec_cmd)
+        os.system(exec_cmd)
 
 
 if __name__ == '__main__':

@@ -339,7 +339,7 @@ good-names=i,
            k,
            ex,
            Run,
-           _
+           _,
            # Additional to default:
            cx,
            cy,

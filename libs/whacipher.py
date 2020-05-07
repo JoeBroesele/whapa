@@ -27,8 +27,8 @@ def banner():
     """)
 
 
-def help():
-    """ Function show help """
+def show_help():
+    """Function showing help message."""
 
     print("""\
     ** Author: Ivan Moreno a.k.a B16f00t
@@ -38,7 +38,7 @@ def help():
     """)
 
 
-def encrypt(db_file, key_file, db_cript, output):
+def encrypt(db_file, key_file, db_cript, output_file):
     """ Function encrypt msgstore Database """
     try:
         with open(key_file, "rb") as fh:
@@ -52,10 +52,10 @@ def encrypt(db_file, key_file, db_cript, output):
         with open(db_file, "rb") as fh:
             data = fh.read()
         aes = AES.new(key, mode=AES.MODE_GCM, nonce=iv)
-        with open(output, "wb") as fh:
+        with open(output_file, "wb") as fh:
             fh.write(header + iv + aes.encrypt(zlib.compress(data)) + footer)
 
-        print("[-] " + db_file + " encrypted, '" + output + "' created")
+        print("[-] " + db_file + " encrypted, '" + output_file + "' created")
     except Exception as e:
         print("[e] An error has ocurred encrypting '" + db_file + "' - ", e)
 
@@ -129,7 +129,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if len(sys.argv) == 1:
-        help()
+        show_help()
 
     elif args.file:
         if args.encrypt:
@@ -160,14 +160,14 @@ if __name__ == "__main__":
             if os.path.exists(args.path):
                 if os.path.exists(args.decrypt):
                     print("[i] Starting to decrypt...")
-                    dir, subdirs, files = next(os.walk(args.path))
+                    root, subdirs, files = next(os.walk(args.path))
                     for crypt_file in files:
                         if os.path.splitext(crypt_file)[1] == ".crypt12":
                             output = args.output + os.path.splitext(crypt_file)[0]
                             if sys.platform == "win32" or sys.platform == "win64" or sys.platform == "cygwin":
-                                decrypt_win(dir + crypt_file, args.decrypt, output)
+                                decrypt_win(root + crypt_file, args.decrypt, output)
                             else:
-                                decrypt(dir + crypt_file, args.decrypt, output)
+                                decrypt(root + crypt_file, args.decrypt, output)
                     print("[i] Decryption completed")
 
                 else:

@@ -3,6 +3,11 @@ Changelog
 All notable changes to this project will be documented in this file.
 
 May 2020
+    [+] whapa-gui.py v1.17
+        [-] Improved update notification.
+    [+] whapa.py v1.3
+        [-] Option added to include profile pictures in the reports and the report index.
+        [-] Links to media are now opened in the same browser window.
 
     [+] General:
         [-] New 'whautils.py' library for improved creation and reading of 'settings.cfg' file.

@@ -44,6 +44,10 @@ Ubuntu 18.04:
     sudo apt install git
     sudo apt install python3-colorama python3-pip python3-pycryptodome python3-tk
 
+Optional, for automatic conversion of the reports to PDF files:
+
+    sudo apt install wkhtmltopdf
+
 Installation
 ====
 You can download the latest version of whapa by cloning the GitHub repository:
@@ -102,6 +106,8 @@ If you copy the "wa.db" database into the same directory as the script, the phon
 For the report to contains the images, videos, documents... you must copy the "WhatsApp/Media" folder of your phone to the whapa directory, otherwise the program will generate thumbnails.
 
 If we want to print the document or create the report in pdf, it is recommended to set the print option -> scale the view <= 60% or 70%, otherwise the report will be displayed too large.
+
+In order to automatically convert all reports and the report index into PDF files, simply run the script ```./tools/reports2pdf.sh```.
 
 
 WHAMERGE

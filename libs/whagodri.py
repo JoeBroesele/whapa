@@ -41,8 +41,9 @@ def banner():
     """)
 
 
-def help():
-    """ Function show help """
+def show_help():
+    """Function showing help message."""
+
     print("""\
     ** Author: Ivan Moreno a.k.a B16f00t
     ** Github: https://github.com/B16f00t
@@ -58,9 +59,9 @@ def getConfigs():
         whautils.create_settings_file()
         # Read the settings from the settings file.
         settings = whautils.read_settings_file()
-        passw       = settings['passw']
-        if not passw or passw == 'yourpassword':
-            settings['passw'] = getpass.getpass(prompt='Google password for account \'' + settings['gmail'] + '\': ', stream=None)
+        passw = settings['passw']
+        if not whautils.check_google_password():
+            settings['passw'] = getpass.getpass(prompt="Google password for account '" + settings['gmail'] + "': ", stream=None)
         if not settings['passw']:
             quit('[e] The password must not be empty!')
     except Exception as e:
@@ -103,13 +104,11 @@ def getGoogleDriveToken(token):
         return str(e)
 
     return token
-    """
-    token = re.search('Auth=(.*?)\n', request.text)
-    if token:
-        return token.group(1)
-    else:
-        quit(request.text)
-    """
+#    token = re.search('Auth=(.*?)\n', request.text)
+#    if token:
+#        return token.group(1)
+#    else:
+#        quit(request.text)
 
 
 def gDriveFileMap(bearer, nextPageToken):
@@ -167,7 +166,7 @@ def getMultipleFiles(drives, bearer, files):
     print("[i] Generating threads...")
     print("[+] Backup name : {}".format(drives["name"]))
     for tName in threadList:
-        thread = myThread(threadID, tName, workQueue)
+        thread = MyThread(threadID, tName, workQueue)
         thread.start()
         threads.append(thread)
         threadID += 1
@@ -201,7 +200,7 @@ def getMultipleFiles(drives, bearer, files):
     print("[i] Downloads finished")
 
 
-class myThread(threading.Thread):
+class MyThread(threading.Thread):
     def __init__(self, threadID, name, q):
         threading.Thread.__init__(self)
         self.threadID = threadID
@@ -260,7 +259,7 @@ if __name__ == "__main__":
     args = parser.parse_args()
 
     if len(sys.argv) == 1:
-        help()
+        show_help()
     else:
         print("[i] Searching...\n")
         getConfigs()
@@ -313,54 +312,54 @@ if __name__ == "__main__":
             getMultipleFiles(drives, bearer, files)
 
         if args.s_images:
-            filter = []
+            filter_var = []
             for i in files:
                 try:
                     if i.split("/")[6] == ".Statuses" or i.split("/")[6] == "WhatsApp Images" or i.split("/")[6] == "WhatsApp Stickers" or i.split("/")[6] == "WhatsApp Profile Photos" or i.split("/")[6] == "WallPaper":
-                        filter.append(i)
+                        filter_var.append(i)
                 except Exception as e:
                     pass
-            getMultipleFiles(drives, bearer, filter)
+            getMultipleFiles(drives, bearer, filter_var)
 
         if args.s_videos:
-            filter = []
+            filter_var = []
             for i in files:
                 try:
                     if i.split("/")[6] == ".Statuses" or i.split("/")[6] == "WhatsApp Animated Gifs" or i.split("/")[6] == "WhatsApp Video":
-                        filter.append(i)
+                        filter_var.append(i)
                 except Exception as e:
                     pass
-            getMultipleFiles(drives, bearer, filter)
+            getMultipleFiles(drives, bearer, filter_var)
 
         if args.s_audios:
-            filter = []
+            filter_var = []
             for i in files:
                 try:
                     if i.split("/")[6] == "WhatsApp Voice Notes" or i.split("/")[6] == "WhatsApp Audio":
-                        filter.append(i)
+                        filter_var.append(i)
                 except Exception as e:
                     pass
-            getMultipleFiles(drives, bearer, filter)
+            getMultipleFiles(drives, bearer, filter_var)
 
         if args.s_documents:
-            filter = []
+            filter_var = []
             for i in files:
                 try:
                     if i.split("/")[6] == "WhatsApp Documents":
-                        filter.append(i)
+                        filter_var.append(i)
                 except Exception as e:
                     pass
-            getMultipleFiles(drives, bearer, filter)
+            getMultipleFiles(drives, bearer, filter_var)
 
         if args.s_databases:
-            filter = []
+            filter_var = []
             for i in files:
                 try:
                     if i.split("/")[5] == "Databases" or i.split("/")[5] == "Backups" or i.split("/")[5] == "gdrive_file_map":
-                        filter.append(i)
+                        filter_var.append(i)
                 except Exception as e:
                     pass
-            getMultipleFiles(drives, bearer, filter)
+            getMultipleFiles(drives, bearer, filter_var)
 
         if args.pull:
             try:

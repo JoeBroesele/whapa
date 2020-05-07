@@ -51,8 +51,8 @@ def banner():
     ------------------- WhatsApp Merger v""" + version + """ -------------------
     """)
 
-def help():
-    """ Function show help """
+def show_help():
+    """Function showing help message."""
 
     print("""\
     ** Author: Ivan Moreno a.k.a B16f00t
@@ -422,7 +422,7 @@ if __name__ == "__main__":
     parser.add_argument("-o", "--output", help="Database output file 'msgstore_merge.db'")
     args = parser.parse_args()
     if len(sys.argv) == 1:
-        help()
+        show_help()
     else:
         if args.output:
             merge(args.path, args.output)

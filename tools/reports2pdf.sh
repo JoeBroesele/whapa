@@ -4,7 +4,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 05 May 2020
-# Rev.: 06 May 2020
+# Rev.: 07 May 2020
 #
 # Convert HTML reports into PDF files.
 #
@@ -18,8 +18,10 @@ MEDIA_DIR="Media"
 
 
 
-# Working directory = script directory.
-WORKING_DIR="`dirname $0`"
+# Set the working directory to the whapa directory, which is the parent
+# directory of the script directory.
+SCRIPT_DIR="`dirname $0`"
+WORKING_DIR="`dirname ${SCRIPT_DIR}`"
 
 
 
@@ -55,13 +57,28 @@ fi
 
 
 
-
 # Create PDF output directory.
 mkdir -p "${WORKING_DIR}/${PDF_DIR}"
 if [ ! -d "${WORKING_DIR}/${PDF_DIR}" ]; then
     echo "ERROR: Cannot access the PDF directory \`${WORKING_DIR}/${PDF_DIR}'!"
     exit 1
 fi
+
+
+
+# Increase the number of file descriptors.
+ulimit -n 1048576
+
+
+
+# Set custom options for `wkhtmltopdf'.
+# Hints:
+# - Increase the number of the option `--javascript-delay' if you get this
+#   warning:
+#       "Warning: Received createRequest signal on a disposed ResourceObject's
+#       NetworkAccessManager. This might be an indication of an iframe taking
+#       too long to load."
+WKHTMLTOPDF_OPTIONS="--javascript-delay 1000"
 
 
 
@@ -73,7 +90,7 @@ for html_file in ${HTML_FILES}; do
         echo "ERROR: Cannot open file \`${html_file}'"
     else
         echo "***** Processing HTML file: \`${html_file}' *****"
-        ${WKHTMLTOPDF} "${html_file}" - | \
+        ${WKHTMLTOPDF} ${WKHTMLTOPDF_OPTIONS} "${html_file}" - | \
             sed -e "s/^\/URI (file:\/\/\/.*\/${REPORTS_DIR}\/\(.*\)\.html)$/\/URI (\1\.pdf)/" | \
             sed -e "s/^\/URI (file:\/\/\/.*\/${MEDIA_DIR}\/\(.*\))$/\/URI (..\/${MEDIA_DIR}\/\1)/" >| \
             "${pdf_file}"
