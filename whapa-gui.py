@@ -19,7 +19,7 @@ import whautils
 author = 'B16f00t'
 title = 'WhatsApp Parser Toolset'
 contact = "http://t.me/b16f00t"
-version = '1.17'
+version = '1.18'
 system = ""
 
 class ToolTip(object):

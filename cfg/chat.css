@@ -1,9 +1,10 @@
 @media print {
-    @page {margin-top:14px;
-           margin-left: 50px;
-           margin-right: 50px;
-           margin-bottom: 75px;}
-
+    @page {
+        margin-top: 14px;
+        margin-left: 50px;
+        margin-right: 50px;
+        margin-bottom: 75px;
+    }
 }
 
 header, footer, nav, aside {
@@ -17,57 +18,58 @@ li, img, table {
 
 body { padding-top:30px; }
 .widget .panel-body { padding:0px; }
-.widget .list-group { margin-bottom: 0; }
-.widget .panel-title { display:inline }
-.widget .label-info { float: right; }
-.widget li.list-group-item {border-radius: 0;border: 0;border-top: 1px solid #ddd; }
-.widget li.list-group-item:hover { background-color: rgba(86,61,124,.1); }
-.widget .mic-info { color: #666666;font-size: 11px; }
+.widget .list-group { margin-bottom:0; }
+.widget .panel-title { display:inline; }
+.widget .label-info { float:right; }
+.widget li.list-group-item {border-radius:0; border:0; border-top:1px solid #ddd; }
+.widget li.list-group-item:hover { background-color:rgba(86,61,124,.1); }
+.widget .mic-info { color:#666666;font-size:11px; }
 .widget .action { margin-top:5px; }
-.widget .comment-text { font-size: 12px; }
-.widget .btn-block { border-top-left-radius:0px;border-top-right-radius:0px; }
-.header { padding: 10px;}
-.col-xs-2 .col-md-1 img { padding-right: 20px; color:#FFFFFF; }
-.row img { float:left; padding-right: 4px; padding-left: 4px; }
+.widget .comment-text { font-size:12px; }
+.widget .btn-block { border-top-left-radius:0px; border-top-right-radius:0px; }
+.header { padding:10px; }
+.col-xs-2 .col-md-1 img { padding-right:20px; color:#FFFFFF; }
+.row img { float:left; padding-right:4px; padding-left:4px; }
 
 .operson { float:right; padding-left:0px; color:#5586e5; font-weight:600; }
-.alter { float:right;}
-.altertext { float:right; position: relative; }
+.alter { float:right; }
+.altertext { float:right; position:relative; }
 
 
-.round { -webkit-border-radius: 4px; -moz-border-radius: 4px; border-radius: 4px; }
-.time { position:relative; float:right; color:#000; font-weight:600; top:8px}
-.time2 { position:relative; float:right; color:#000; font-weight:600; top:8px}
-.time-system { position:relative; float:center; color:#000; font-weight:600; }
+.round { -webkit-border-radius:4px; -moz-border-radius:4px; border-radius:4px; }
+.time { position:relative; float:right; color:#000; font-weight:600; top:8px; }
+.time2 { position:relative; float:right; color:#000; font-weight:600; top:8px; }
+.time-system { position:relative; float:none; color:#000; font-weight:600; }
 
-.personName {  float: left; padding-left:0px; color:#5586e5; font-weight:400; font-weight:bold; }
-.personSay {   padding-left:0px; color:#000; font-weight:400; }
+.personName { float:left; padding-left:0px; color:#5586e5; font-weight:400; font-weight:bold; text-align:left; }
+.personSay  { float:left; padding-left:0px; color:#000; font-weight:400; text-align:left; width:100%; }
 
-.personName2 { float: right;  padding-left:0px; color:#5586e5; font-weight:400; font-weight:bold; }
-.personSay2 {  float: right; padding-left:0px; color:#000; font-weight:400; }
+.personName2 { float:left; padding-left:0px; color:#5586e5; font-weight:400; font-weight:bold; text-align:left; }
+.personSay2  { float:left; padding-left:0px; color:#000; font-weight:400; text-align:left; width:100%; }
 
-.person-System {   padding-left:0px; color:#000; font-weight:400; }
+.person-System { padding-left:0px; color:#000; font-weight:400; }
 
-.container { text-align:center;}
+.container { text-align:center; }
 
 ul { list-style-type:none; padding:0px; margin:0px; }
-ul li { padding-left: 0px; }
-
-chat bubble empty css
-
-.bubble_empty{
+ul li { padding-left:0px; }
 
 
+
+/* Chat bubble empty CSS. */
+
+.bubble_empty {
 }
 
-
-.bubble_empty{
+.bubble_empty {
     background-color: transparent;
     display: inline-block;
     width: 95%;
-    }
+}
 
-chat bubble css
+
+
+/* Chat bubble CSS. */
 
 .bubble{
     background-color: #F2F2F2;
@@ -80,24 +82,25 @@ chat bubble css
     float: left;
     margin: 5px 45px 5px 20px;
     border-color: #cdecb0;
+    overflow-wrap: break-word;
 }
 
 .bubble::before {
     background-color: #F2F2F2;
     content: "\00a0";
     display: inline-block;
+    width: 20px;
     height: 16px;
     position: absolute;
+    left: -9px;
     top: 11px;
     transform:         rotate( 29deg ) skew( -35deg );
     -moz-transform:    rotate( 29deg ) skew( -35deg );
     -ms-transform:     rotate( 29deg ) skew( -35deg );
     -o-transform:      rotate( 29deg ) skew( -35deg );
     -webkit-transform: rotate( 29deg ) skew( -35deg );
-    width:  20px;
     box-shadow: -2px 2px 2px 0 rgba( 178, 178, 178, .4 );
-    left: -9px;
-    }
+}
 
 .bubble{
     float: left;
@@ -110,14 +113,14 @@ chat bubble css
     vertical-align: top;
     margin: 10px 10px;
     border-color: #cdecb0;
-    width: 47%;
-    }
+    width: 50%;
+}
 
 
- chat bubble css
 
+/* Chat bubble 2 CSS. */
 
-bubble2{
+.bubble2{
     background-color: #dfeecf;
     border-radius: 5px;
     box-shadow: 0 0 6px #B2B2B2;
@@ -128,29 +131,30 @@ bubble2{
     float: left;
     margin: 5px 45px 5px 20px;
     border-color: #cdecb0;
-    }
+    overflow-wrap: break-word;
+}
 
 .bubble2::before {
-    float:right;
+    float: right;
     background-color: #dfeecf;
     content: "\00a0";
     display: inline-block;
-    height: 19px;
-    position: relative;
-    left: 26px;
+    width: 20px;
+    height: 16px;
+    position: absolute;
+    right: -9px;
     top: 11px;
     transform:         rotate( 205deg ) skew( -35deg );
     -moz-transform:    rotate( 205deg ) skew( -35deg );
     -ms-transform:     rotate( 205deg ) skew( -35deg );
     -o-transform:      rotate( 205deg ) skew( -35deg );
     -webkit-transform: rotate( 205deg ) skew( -35deg );
-    width:  20px;
     box-shadow: -2px 2px 2px 0 rgba( 178, 178, 178, .4 );
-    }
+}
 
 .bubble2{
     list-style:none;
-    float:right;
+    float: right;
     background-color: #dfeecf;
     border-radius: 5px;
     box-shadow: 0 0 6px #B2B2B2;
@@ -160,12 +164,12 @@ bubble2{
     vertical-align: top;
     margin: 10px 10px;
     border-color: #cdecb0;
-    width: 47%;
-    }
+    width: 50%;
+}
 
 
 
- chat bubble-system css
+/* Chat bubble-system CSS. */
 
 .bubble-system{
     background-color: #cdcdcd;
@@ -180,8 +184,7 @@ bubble2{
 }
 
 .bubble-system::before {
-
-    }
+}
 
 .bubble-system{
     background-color: #cdcdcd;
@@ -194,4 +197,5 @@ bubble2{
     border-color: #cdecb0;
     position: relative;
     text-align: center;
+}
 

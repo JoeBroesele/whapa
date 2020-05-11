@@ -3,6 +3,14 @@ Changelog
 All notable changes to this project will be documented in this file.
 
 May 2020
+
+    [+] whapa-gui.py v1.18
+        [-] Version number incremented.
+    [+] whapa.py v1.4
+        [-] Better differentiation of system messages, eliminating some errors.
+        [-] Line breaks in messages are now displayed in the report.
+        [-] Optimized the HTML layout of the reports.
+
     [+] whapa-gui.py v1.17
         [-] Improved update notification.
     [+] whapa.py v1.3
