@@ -57,19 +57,6 @@ def show_help():
     """)
 
 
-def html_report_message(text):
-    """Format a message for an HMTL report."""
-    return text.replace("\r", "").replace("\n", "<br>\n")
-
-
-def linkify(text):
-    """Search for URLs in a text and replace them with links."""
-    # Code found here:
-    # https://stackoverflow.com/questions/1071191/detect-urls-in-a-string-and-wrap-with-a-href-tag
-    URL_REGEX = re.compile(r'''((?:mailto:|ftp://|http[s]?://)[^ <>'"{}|\\^`[\]]*)''')
-    return URL_REGEX.sub(r'<a href="\1" target="_blank">\1</a>', text)
-
-
 def db_connect(db):
     """Function connecting to database"""
     if os.path.exists(db):
@@ -126,6 +113,19 @@ def duration_file(obj):
     return obj
 
 
+def html_report_message(text):
+    """Format a message for an HMTL report."""
+    return text.replace("\r", "").replace("\n", "<br>\n")
+
+
+def linkify(text):
+    """Search for URLs in a text and replace them with links."""
+    # Code found here:
+    # https://stackoverflow.com/questions/1071191/detect-urls-in-a-string-and-wrap-with-a-href-tag
+    URL_REGEX = re.compile(r'''((?:mailto:|ftp://|http[s]?://)[^ <>'"{}|\\^`[\]]*)''')
+    return URL_REGEX.sub(r'<a href="\1" target="_blank">\1</a>', text)
+
+
 def html_preview_file(file):
     """Create an HTML image tag for a preview picture with a fixed size from an image file."""
     return html_preview_file_size(file, int(settings['preview_pics_size']), int(settings['preview_pics_size']))
@@ -151,7 +151,11 @@ def html_preview_file_size(file, tag_width, tag_height):
 
 
 def profile_picture(group_id, user_id):
-    # If both group_id and user_id are empty, return and empty string.
+    """Check if a profile picture exists. If not, create a default one from a template. Return a profile picture string."""
+    # Strip the extension from the user and the group ID.
+    group_id = group_id.strip("@g.us")
+    user_id = user_id.strip("@s.whatsapp.net")
+    # If both group_id and user_id are empty, return an empty string.
     if not group_id + user_id:
         return ""
     profile_picture_dir = settings['profile_pics_dir'].rstrip('\/')
@@ -162,22 +166,57 @@ def profile_picture(group_id, user_id):
     else:
         profile_picture_template = settings['profile_pic_user']
     # Check if the profile picture path exists. If not, create it.
-    if not os.path.isfile(profile_picture_dir):
+    if not os.path.exists(profile_picture_dir):
         distutils.dir_util.mkpath(profile_picture_dir)
-        # Check if the profile picture exists. If not, copy the default profile picture template.
-        if (not os.path.exists(profile_picture_file) and
-            os.path.isfile(profile_picture_template) and
-            os.access(profile_picture_template, os.R_OK)):
-            try:
-                profile_picture_default = Image.open(profile_picture_template)
-                profile_picture_default.save(profile_picture_file)
-            except Exception as e:
-                print("Error copying file `{0:s}' to `{1:s}': ".format(profile_picture_template, profile_picture_file) + str(e))
+    # Check if the profile picture exists. If not, copy the default profile picture template.
+    if (not os.path.exists(profile_picture_file) and
+        os.path.isfile(profile_picture_template) and
+        os.access(profile_picture_template, os.R_OK)):
+        try:
+            profile_picture_default = Image.open(profile_picture_template)
+            profile_picture_default.save(profile_picture_file)
+        except Exception as e:
+            print("Error copying file `{0:s}' to `{1:s}': ".format(profile_picture_template, profile_picture_file) + str(e))
     return profile_picture_file
 
 
+def vcard_data_extract(vcard_data_bin):
+    """Extract vCard data and contact names from binary data."""
+    vcard_data = ""
+    vcard_names = []
+    vcards = str(vcard_data_bin).replace("\r", "").replace("\\n", "\n").split("BEGIN:VCARD")
+    for vc in vcards[1:]:
+        vcard_data += "BEGIN:VCARD"
+        vcard_data += vc.split("END:VCARD")[0] + "END:VCARD\n"
+        tmp = vc.split("\nFN:")
+        if len(tmp) >= 2:
+            tmp = tmp[1].split("\n")
+            if tmp:
+                vcard_names.append(tmp[0])
+            else:
+                vcard_names.append("")
+        else:
+            vcard_names.append("")
+    return vcard_data.strip("\n"), vcard_names
+
+
+def vcard_file_create(vcard_file_name, vcard_data):
+    """Save vCard data to a vCard (*.vcf) file."""
+    # Check if the contact vCard path exists. If not, create it.
+    if not os.path.exists(os.path.dirname(vcard_file_name)):
+        distutils.dir_util.mkpath(os.path.dirname(vcard_file_name))
+    # Save vCard data to file.
+    overwrite = True
+    if not os.path.isfile(vcard_file_name) or overwrite:
+        with open(vcard_file_name, 'wt') as vcard_file:
+            if vcard_data:  # vCard data exist.
+                vcard_file.write(vcard_data)
+            else:           # Write an empty file, if no vCard data exist.
+                vcard_file.write("")
+
+
 def names(obj):
-    """Function saves a name list if exits wa.db"""
+    """Function saves a name list if exists wa.db"""
     if os.path.exists(obj):
         try:
             with sqlite3.connect(obj) as conn:
@@ -356,7 +395,7 @@ def report(obj, html):
         if settings['logo']:
             rep_ini += """
             </table>"""
-        if settings['profile_pics_enable'].lower() in ['1', 'on', 'true', 't', 'yes', 'y']:
+        if settings['profile_pics_enable']:
             rep_ini += """
             <table style="width:100%;">
                 <tr>
@@ -451,7 +490,7 @@ def report(obj, html):
         if settings['logo']:
             rep_ini += """
             </table>"""
-        if settings['profile_pics_enable'].lower() in ['1', 'on', 'true', 't', 'yes', 'y']:
+        if settings['profile_pics_enable']:
             rep_ini += """
             <table style="width:100%;">
                 <tr>
@@ -756,12 +795,23 @@ def reply(_id):
                 ans += Fore.RED + "Type: " + Fore.RESET + rep[7] + Fore.RED + " - Size: " + Fore.RESET + str(rep[9]) + " bytes " + size_file(rep[9]) + Fore.RED + " - Duration: " + Fore.RESET + duration_file(rep[12]) + "\n"
 
         elif int(rep[8]) == 4:  # media_wa_type 4, Contact
-            if report_var == 'EN':
-                reply_msj += "<br>" + html.escape(rep[10]) + "<br>&#9742;  Contact vCard"
-            if report_var == 'ES':
-                reply_msj += "<br>" + html.escape(rep[10]) + "<br>&#9742;  Contacto vCard"
+            vcard_data, vcard_names = vcard_data_extract(rep[4])
+            if settings['contact_vcard_dir']:
+                vcard_file_name = os.path.join(settings['contact_vcard_dir'], arg_group + arg_user + "-" + rep[2] + ".vcf")
+                vcard_file_create(vcard_file_name, vcard_data)
+                if report_var == 'EN':
+                    report_msj += html.escape(rep[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contact vCard</a>"
+                elif report_var == 'ES':
+                    report_msj += html.escape(rep[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contacto vCard</a>"
+                else:
+                    message += Fore.GREEN + "Name: " + Fore.RESET + rep[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
             else:
-                ans += Fore.RED + " - Name: " + Fore.RESET + rep[10] + Fore.RED + " - Type:" + Fore.RESET + " Contact vCard\n"
+                if report_var == 'EN':
+                    reply_msj += "<br>" + html.escape(rep[10]) + "<br>&#9742; Contact vCard"
+                if report_var == 'ES':
+                    reply_msj += "<br>" + html.escape(rep[10]) + "<br>&#9742; Contacto vCard"
+                else:
+                    ans += Fore.RED + " - Name: " + Fore.RESET + rep[10] + Fore.RED + " - Type:" + Fore.RESET + " Contact vCard\n"
 
         elif int(rep[8]) == 5:  # media_wa_type 5, Location
             if rep[6]:  # media_url exists
@@ -875,17 +925,24 @@ def reply(_id):
                 ans += Fore.RED + "Type: " + Fore.RESET + "Gif" + Fore.RED + " - Size: " + Fore.RESET + str(rep[9]) + " bytes " + size_file(rep[9]) + Fore.RED + " - Duration: " + Fore.RESET + duration_file(rep[12]) + "\n"
 
         elif int(rep[8]) == 14:  # Vcard Multiple
-            concat = ""
-            chain = str(rep[19]).split('BEGIN:VCARD')
-            for i in chain[1:]:
-                concat += "BEGIN:VCARD"
-                concat += i.split('END:VCARD')[0] + "END:VCARD"
-            if report_var == 'EN':
-                reply_msj += "<br>" + html.escape(rep[10]) + "<br>&#9742;  Contact vCard</br>" + html.escape(concat)
-            elif report_var == 'ES':
-                reply_msj += "<br>" + html.escape(rep[10]) + "<br>&#9742;  Contacto vCard</br>" + html.escape(concat)
+            vcard_data, vcard_names = vcard_data_extract(rep[19])
+            if settings['contact_vcard_dir']:
+                vcard_file_name = os.path.join(settings['contact_vcard_dir'], arg_group + arg_user + "-" + rep[2] + ".vcf")
+                vcard_file_create(vcard_file_name, vcard_data)
+                vcard_names_html = ''.join(["<br>" + html.escape(str(vc_name)) for vc_name in vcard_names])
+                if report_var == 'EN':
+                    report_msj += html.escape(rep[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contact vCard:" + vcard_names_html + "</a>"
+                elif report_var == 'ES':
+                    report_msj += html.escape(rep[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contacto vCard:</br></a>" + vcard_names_html
+                else:
+                    message += Fore.GREEN + "Name: " + Fore.RESET + rep[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
             else:
-                ans += Fore.RED + " - Name: " + Fore.RESET + rep[10] + Fore.RED + " - Type:" + Fore.RESET + " Contact vCard" + concat + "\n"
+                if report_var == 'EN':
+                    reply_msj += "<br>" + html.escape(rep[10]) + "<br>&#9742; Contact vCard:</br>" + vcard_data.replace("\r", "").replace("\n", "<br>")
+                elif report_var == 'ES':
+                    reply_msj += "<br>" + html.escape(rep[10]) + "<br>&#9742; Contacto vCard:</br>" + vcard_data.replace("\r", "").replace("\n", "<br>")
+                else:
+                    ans += Fore.RED + " - Name: " + Fore.RESET + rep[10] + Fore.RED + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
 
         elif int(rep[8]) == 15:  # media_wa_type 15, Deleted Object
             if int(rep[16]) == 5:  # edit_version 5, deleted for me
@@ -1478,12 +1535,23 @@ def messages(consult, rows, report_html):
                             report_msj += "<br/><a href=\"." + thumb + "\" target=\"_self\">" + html_preview_file(thumb + ".jpg") + "</a>"
 
                     elif int(data[8]) == 4:  # media_wa_type 4, Contact
-                        if report_var == 'EN':
-                            report_msj += html.escape(data[10]) + "<br>&#9742;  Contact vCard"
-                        elif report_var == 'ES':
-                            report_msj += html.escape(data[10]) + "<br>&#9742;  Contacto vCard"
+                        vcard_data, vcard_names = vcard_data_extract(data[4])
+                        if settings['contact_vcard_dir']:
+                            vcard_file_name = os.path.join(settings['contact_vcard_dir'], arg_group + arg_user + "-" + data[2] + ".vcf")
+                            vcard_file_create(vcard_file_name, vcard_data)
+                            if report_var == 'EN':
+                                report_msj += html.escape(data[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contact vCard</a>"
+                            elif report_var == 'ES':
+                                report_msj += html.escape(data[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contacto vCard</a>"
+                            else:
+                                message += Fore.GREEN + "Name: " + Fore.RESET + data[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
                         else:
-                            message += Fore.GREEN + "Name: " + Fore.RESET + data[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard\n"
+                            if report_var == 'EN':
+                                report_msj += html.escape(data[10]) + "<br>&#9742; Contact vCard"
+                            elif report_var == 'ES':
+                                report_msj += html.escape(data[10]) + "<br>&#9742; Contacto vCard"
+                            else:
+                                message += Fore.GREEN + "Name: " + Fore.RESET + data[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
 
                     elif int(data[8]) == 5:  # media_wa_type 5, Location
                         if data[6]:  # media_url exists
@@ -1647,18 +1715,24 @@ def messages(consult, rows, report_html):
                             report_msj += "<br><a href=\"." + thumb + "\" target=\"_self\">" + html_preview_file(thumb + ".jpg") + "</a>"
 
                     elif int(data[8]) == 14:  # media_wa_type 14  Vcard multiples
-                        concat = ""
-                        chain = str(data[19]).split('BEGIN:VCARD')
-                        for i in chain[1:]:
-                            concat += "BEGIN:VCARD"
-                            concat += i.split('END:VCARD')[0] + "END:VCARD"
-
-                        if report_var == 'EN':
-                            report_msj += html.escape(data[10]) + "<br>&#9742;  Contact vCard</br>" + html.escape(concat)
-                        elif report_var == 'ES':
-                            report_msj += html.escape(data[10]) + "<br>&#9742;  Contacto vCard</br>" + html.escape(concat)
+                        vcard_data, vcard_names = vcard_data_extract(data[19])
+                        if settings['contact_vcard_dir']:
+                            vcard_file_name = os.path.join(settings['contact_vcard_dir'], arg_group + arg_user + "-" + data[2] + ".vcf")
+                            vcard_file_create(vcard_file_name, vcard_data)
+                            vcard_names_html = ''.join(["<br>" + html.escape(str(vc_name)) for vc_name in vcard_names])
+                            if report_var == 'EN':
+                                report_msj += html.escape(data[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contact vCard:" + vcard_names_html + "</a>"
+                            elif report_var == 'ES':
+                                report_msj += html.escape(data[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contacto vCard:</br></a>" + vcard_names_html
+                            else:
+                                message += Fore.GREEN + "Name: " + Fore.RESET + data[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
                         else:
-                            message += Fore.GREEN + "Name: " + Fore.RESET + data[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard" + concat + "\n"
+                            if report_var == 'EN':
+                                report_msj += html.escape(data[10]) + "<br>&#9742; Contact vCard:</br>" + vcard_data.replace("\r", "").replace("\n", "<br>")
+                            elif report_var == 'ES':
+                                report_msj += html.escape(data[10]) + "<br>&#9742; Contacto vCard:</br>" + vcard_data.replace("\r", "").replace("\n", "<br>")
+                            else:
+                                message += Fore.GREEN + "Name: " + Fore.RESET + data[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
 
                     elif int(data[8]) == 15:  # media_wa_type 15, Deleted Object
                         if int(data[16]) == 5:  # edit_version 5, deleted for me
@@ -2109,7 +2183,7 @@ if __name__ == "__main__":
 
                         if i.split('@')[1] == "g.us":
                             report_med += report_med_newline
-                            if settings['profile_pics_enable'].lower() in ['1', 'on', 'true', 't', 'yes', 'y']:
+                            if settings['profile_pics_enable']:
                                 profile_picture_img_tag = "<img src=\"." + profile_picture(i, "") + "\" alt=\"." + profile_picture(i, "") + "\" height=\"" + settings['profile_pics_size_index'] + "\" style=\"padding-right:10px; vertical-align:middle;\">"
                             if report_var == 'EN':
                                 report_med_group = "Group"
@@ -2131,7 +2205,7 @@ if __name__ == "__main__":
 
                         elif i.split('@')[1] == "s.whatsapp.net":
                             report_med += report_med_newline
-                            if settings['profile_pics_enable'].lower() in ['1', 'on', 'true', 't', 'yes', 'y']:
+                            if settings['profile_pics_enable']:
                                 profile_picture_img_tag = "<img src=\"." + profile_picture("", i.split('@')[0]) + "\" alt=\"." + profile_picture("", i.split('@')[0]) + "\" height=\"" + settings['profile_pics_size_index'] + "\" style=\"padding-right:10px; vertical-align:middle;\">"
                             if report_var == 'EN':
                                 report_med_user = "User"

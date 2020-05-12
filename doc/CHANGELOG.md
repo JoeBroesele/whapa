@@ -10,6 +10,7 @@ May 2020
         [-] Better differentiation of system messages, eliminating some errors.
         [-] Line breaks in messages are now displayed in the report.
         [-] Optimized the HTML layout of the reports.
+        [-] Improved processing of contact vCards.
 
     [+] whapa-gui.py v1.17
         [-] Improved update notification.

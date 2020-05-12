@@ -18,6 +18,7 @@ profile_pics_size_index = 48
 profile_pics_dir = ./Media/Profile Pictures/
 profile_pic_user = ./images/profile-pic-user.jpg
 profile_pic_group = ./images/profile-pic-group.jpg
+contact_vcard_dir = ./Media/Contact vCards/
 
 [auth]
 gmail = alias@gmail.com

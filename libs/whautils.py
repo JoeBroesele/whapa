@@ -4,7 +4,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 05 May 2020
-# Rev.: 07 May 2020
+# Rev.: 13 May 2020
 #
 # Utility library for the WhatsApp Parser Toolset.
 #
@@ -34,6 +34,7 @@ settings = {
     "profile_pics_dir":         "",
     "profile_pic_user":         "",
     "profile_pic_group":        "",
+    "contact_vcard_dir":        "",
     # Section 'auth'.
     "gmail":                    "",
     "passw":                    "",
@@ -75,6 +76,7 @@ profile_pics_size_index = 48
 profile_pics_dir = ./Media/Profile Pictures/
 profile_pic_user = ./images/profile-pic-user.jpg
 profile_pic_group = ./images/profile-pic-group.jpg
+contact_vcard_dir = ./Media/Contact vCards/
 
 [auth]
 gmail = alias@gmail.com
@@ -124,6 +126,7 @@ def read_settings_file():
         settings['profile_pics_dir']        = config.get('report', 'profile_pics_dir')
         settings['profile_pic_user']        = config.get('report', 'profile_pic_user')
         settings['profile_pic_group']       = config.get('report', 'profile_pic_group')
+        settings['contact_vcard_dir']       = config.get('report', 'contact_vcard_dir')
         # Section 'auth'.
         settings['gmail']                   = config.get('auth', 'gmail')
         settings['passw']                   = config.get('auth', 'passw')
@@ -136,6 +139,10 @@ def read_settings_file():
         settings['client_pkg']              = config.get('client', 'pkg')
         settings['client_sig']              = config.get('client', 'sig')
         settings['client_ver']              = config.get('client', 'ver')
+
+        # Evaluate boolean settings.
+        bool_true_list = ['1', 'on', 'true', 't', 'yes', 'y']
+        settings['profile_pics_enable'] = bool(settings['profile_pics_enable'].lower() in bool_true_list)
 
         return settings
     except Exception as e:
