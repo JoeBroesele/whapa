@@ -1,15 +1,16 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
-import html
-import distutils.dir_util
 import argparse
-import sqlite3
+import distutils.dir_util
+import html
 import os
-import time
-import sys
+import quopri
 import random
 import re
+import sqlite3
+import sys
+import time
 from colorama import init, Fore
 from PIL import Image
 
@@ -120,6 +121,11 @@ def html_report_message(text):
 
 def linkify(text):
     """Search for URLs in a text and replace them with links."""
+    # Caution: vCards can contain URLs, that become part of the tooltip, if
+    # these are enabled. These must *NOT* be linkified!
+    VCARD_REGEX = re.compile("""<a href=".*" title=".*">.* vCard.*</a>$""")
+    if VCARD_REGEX.search(text):
+        return text
     # Code found here:
     # https://stackoverflow.com/questions/1071191/detect-urls-in-a-string-and-wrap-with-a-href-tag
     URL_REGEX = re.compile(r'''((?:mailto:|ftp://|http[s]?://)[^ <>'"{}|\\^`[\]]*)''')
@@ -198,6 +204,99 @@ def vcard_data_extract(vcard_data_bin):
         else:
             vcard_names.append("")
     return vcard_data.strip("\n"), vcard_names
+
+
+def html_vcard_tooltip(vcard_data):
+    """Create an HTML tooltip (title) for vCard data."""
+    vcard_tooltip = ""
+    if settings['contact_tooltip']:
+        # Raw vCard data as tooltip.
+        if not settings['contact_tooltip_pretty']:
+            vcard_tooltip = " title=\"" + html.escape(vcard_data).replace("\n", "&#10;") + "\""
+        # Prettily formatted vCard data as tooltip.
+        else:
+            vcard_tooltip = " title=\"" + html.escape(vcard_format_pretty(vcard_data)).replace("\n", "&#10;") + "\""
+    return vcard_tooltip
+
+
+def vcard_format_pretty(vcard_data):
+    """Format vCard data in a pretty way."""
+    vcard_pretty = ""
+    try:
+        vcards = list(filter(None, vcard_data.replace("END:VCARD", "").replace("=\n=", "=").split("BEGIN:VCARD")))
+        for vc in vcards:
+            vc_lines = list(filter(None, vc.strip("\n").split("\n")))
+            for vc_line in vc_lines:
+                vc_line = vc_line.strip(" \n\r")
+                # Only split at the first ':'! This is important if the vCard
+                # attributes contain another ':', like e.g. in URLs.
+                vc_data = list(filter(None, vc_line.split(":", 1)))
+                if len(vc_data) < 2:
+                    continue
+                vc_props = list(filter(None, vc_data[0].split(";")))
+                if not vc_props:
+                    continue
+                # Properties.
+                vc_prop = list(filter(None, vc_props[0].split(".")))[-1].upper()
+                if vc_prop == "VERSION":
+                    continue
+                elif vc_prop == "N":
+                    vcard_pretty += "Name"
+                elif vc_prop == "FN":
+                    vcard_pretty += "Full name"
+                elif vc_prop == "ADR":
+                    vcard_pretty += "Address"
+                elif vc_prop == "BDAY":
+                    vcard_pretty += "Birthday"
+                elif vc_prop == "EMAIL":
+                    vcard_pretty += "Email"
+                elif vc_prop == "NOTE":
+                    vcard_pretty += "Note"
+                elif vc_prop == "TEL":
+                    vcard_pretty += "Telephone"
+                elif vc_prop == "URL":
+                    vcard_pretty += "Website"
+                else:
+                    vcard_pretty += vc_prop
+                # Property parameters.
+                vc_prop_params = list(filter(None, vc_props[1:]))
+                quoted_printable = False
+                if vc_prop_params:
+                    vcard_pretty += " ("
+                    param_cnt = 0
+                    for param in vc_prop_params:
+                        if param:
+                            param_cnt += 1
+                            if param.upper().find("ENCODING=") >= 0 and param.upper().find("QUOTED-PRINTABLE") >= 0:
+                                quoted_printable = True
+                                continue
+                            if param_cnt > 1:
+                                vcard_pretty += ", "
+                            vcard_pretty += param.lower()
+                    vcard_pretty += ")"
+                vcard_pretty += ": "
+                # Attributes.
+                vc_attributes = list(filter(None, vc_data[1].split(";")))
+                if vc_attributes:
+                    attr_cnt = 0
+                    for attr in vc_attributes:
+                        if attr:
+                            attr_cnt += 1
+                            if attr_cnt > 1:
+                                vcard_pretty += ", "
+                            if quoted_printable:
+                                vcard_pretty += quopri.decodestring(attr).decode('utf-8')
+                            else:
+                                vcard_pretty += attr
+                # End of line.
+                vcard_pretty += "\n"
+            # End of current vCard.
+            vcard_pretty += "\n"
+        # Remove last new line.
+        vcard_pretty = vcard_pretty.rstrip("\n")
+    except Exception as e:
+        print("\nError in function 'vcard_format_pretty': " + str(e))
+    return vcard_pretty
 
 
 def vcard_file_create(vcard_file_name, vcard_data):
@@ -796,15 +895,16 @@ def reply(_id):
 
         elif int(rep[8]) == 4:  # media_wa_type 4, Contact
             vcard_data, vcard_names = vcard_data_extract(rep[4])
+            vcard_tooltip = html_vcard_tooltip(vcard_data)
             if settings['contact_vcard_dir']:
                 vcard_file_name = os.path.join(settings['contact_vcard_dir'], arg_group + arg_user + "-" + rep[2] + ".vcf")
                 vcard_file_create(vcard_file_name, vcard_data)
                 if report_var == 'EN':
-                    report_msj += html.escape(rep[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contact vCard</a>"
+                    reply_msj += html.escape(rep[10]) + "<br><a href=\"." + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contact vCard</a>"
                 elif report_var == 'ES':
-                    report_msj += html.escape(rep[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contacto vCard</a>"
+                    reply_msj += html.escape(rep[10]) + "<br><a href=\"." + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contacto vCard</a>"
                 else:
-                    message += Fore.GREEN + "Name: " + Fore.RESET + rep[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
+                    ans += Fore.GREEN + "Name: " + Fore.RESET + rep[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
             else:
                 if report_var == 'EN':
                     reply_msj += "<br>" + html.escape(rep[10]) + "<br>&#9742; Contact vCard"
@@ -926,16 +1026,17 @@ def reply(_id):
 
         elif int(rep[8]) == 14:  # Vcard Multiple
             vcard_data, vcard_names = vcard_data_extract(rep[19])
+            vcard_tooltip = html_vcard_tooltip(vcard_data)
             if settings['contact_vcard_dir']:
                 vcard_file_name = os.path.join(settings['contact_vcard_dir'], arg_group + arg_user + "-" + rep[2] + ".vcf")
                 vcard_file_create(vcard_file_name, vcard_data)
                 vcard_names_html = ''.join(["<br>" + html.escape(str(vc_name)) for vc_name in vcard_names])
                 if report_var == 'EN':
-                    report_msj += html.escape(rep[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contact vCard:" + vcard_names_html + "</a>"
+                    reply_msj += html.escape(rep[10]) + "<br><a href=\"." + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contact vCard:" + vcard_names_html + "</a>"
                 elif report_var == 'ES':
-                    report_msj += html.escape(rep[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contacto vCard:</br></a>" + vcard_names_html
+                    reply_msj += html.escape(rep[10]) + "<br><a href=\"." + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contacto vCard:</br></a>" + vcard_names_html
                 else:
-                    message += Fore.GREEN + "Name: " + Fore.RESET + rep[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
+                    ans += Fore.GREEN + "Name: " + Fore.RESET + rep[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
             else:
                 if report_var == 'EN':
                     reply_msj += "<br>" + html.escape(rep[10]) + "<br>&#9742; Contact vCard:</br>" + vcard_data.replace("\r", "").replace("\n", "<br>")
@@ -1536,13 +1637,14 @@ def messages(consult, rows, report_html):
 
                     elif int(data[8]) == 4:  # media_wa_type 4, Contact
                         vcard_data, vcard_names = vcard_data_extract(data[4])
+                        vcard_tooltip = html_vcard_tooltip(vcard_data)
                         if settings['contact_vcard_dir']:
                             vcard_file_name = os.path.join(settings['contact_vcard_dir'], arg_group + arg_user + "-" + data[2] + ".vcf")
                             vcard_file_create(vcard_file_name, vcard_data)
                             if report_var == 'EN':
-                                report_msj += html.escape(data[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contact vCard</a>"
+                                report_msj += html.escape(data[10]) + "<br><a href=\"." + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contact vCard</a>"
                             elif report_var == 'ES':
-                                report_msj += html.escape(data[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contacto vCard</a>"
+                                report_msj += html.escape(data[10]) + "<br><a href=\"." + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contacto vCard</a>"
                             else:
                                 message += Fore.GREEN + "Name: " + Fore.RESET + data[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
                         else:
@@ -1716,14 +1818,15 @@ def messages(consult, rows, report_html):
 
                     elif int(data[8]) == 14:  # media_wa_type 14  Vcard multiples
                         vcard_data, vcard_names = vcard_data_extract(data[19])
+                        vcard_tooltip = html_vcard_tooltip(vcard_data)
                         if settings['contact_vcard_dir']:
                             vcard_file_name = os.path.join(settings['contact_vcard_dir'], arg_group + arg_user + "-" + data[2] + ".vcf")
                             vcard_file_create(vcard_file_name, vcard_data)
                             vcard_names_html = ''.join(["<br>" + html.escape(str(vc_name)) for vc_name in vcard_names])
                             if report_var == 'EN':
-                                report_msj += html.escape(data[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contact vCard:" + vcard_names_html + "</a>"
+                                report_msj += html.escape(data[10]) + "<br><a href=\"." + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contact vCard:" + vcard_names_html + "</a>"
                             elif report_var == 'ES':
-                                report_msj += html.escape(data[10]) + "<br><a href=\"." + vcard_file_name + "\">&#9742; Contacto vCard:</br></a>" + vcard_names_html
+                                report_msj += html.escape(data[10]) + "<br><a href=\"." + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contacto vCard:</br></a>" + vcard_names_html
                             else:
                                 message += Fore.GREEN + "Name: " + Fore.RESET + data[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
                         else:

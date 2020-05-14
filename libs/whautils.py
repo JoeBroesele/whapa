@@ -4,7 +4,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 05 May 2020
-# Rev.: 13 May 2020
+# Rev.: 14 May 2020
 #
 # Utility library for the WhatsApp Parser Toolset.
 #
@@ -35,6 +35,8 @@ settings = {
     "profile_pic_user":         "",
     "profile_pic_group":        "",
     "contact_vcard_dir":        "",
+    "contact_tooltip":          "",
+    "contact_tooltip_pretty":   "",
     # Section 'auth'.
     "gmail":                    "",
     "passw":                    "",
@@ -77,6 +79,8 @@ profile_pics_dir = ./Media/Profile Pictures/
 profile_pic_user = ./images/profile-pic-user.jpg
 profile_pic_group = ./images/profile-pic-group.jpg
 contact_vcard_dir = ./Media/Contact vCards/
+contact_tooltip = yes
+contact_tooltip_pretty = yes
 
 [auth]
 gmail = alias@gmail.com
@@ -127,6 +131,8 @@ def read_settings_file():
         settings['profile_pic_user']        = config.get('report', 'profile_pic_user')
         settings['profile_pic_group']       = config.get('report', 'profile_pic_group')
         settings['contact_vcard_dir']       = config.get('report', 'contact_vcard_dir')
+        settings['contact_tooltip']         = config.get('report', 'contact_tooltip')
+        settings['contact_tooltip_pretty']  = config.get('report', 'contact_tooltip_pretty')
         # Section 'auth'.
         settings['gmail']                   = config.get('auth', 'gmail')
         settings['passw']                   = config.get('auth', 'passw')
@@ -142,7 +148,9 @@ def read_settings_file():
 
         # Evaluate boolean settings.
         bool_true_list = ['1', 'on', 'true', 't', 'yes', 'y']
-        settings['profile_pics_enable'] = bool(settings['profile_pics_enable'].lower() in bool_true_list)
+        settings['profile_pics_enable']     = bool(settings['profile_pics_enable'].lower() in bool_true_list)
+        settings['contact_tooltip']         = bool(settings['contact_tooltip'].lower() in bool_true_list)
+        settings['contact_tooltip_pretty']  = bool(settings['contact_tooltip_pretty'].lower() in bool_true_list)
 
         return settings
     except Exception as e:

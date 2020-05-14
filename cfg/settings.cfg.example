@@ -19,6 +19,8 @@ profile_pics_dir = ./Media/Profile Pictures/
 profile_pic_user = ./images/profile-pic-user.jpg
 profile_pic_group = ./images/profile-pic-group.jpg
 contact_vcard_dir = ./Media/Contact vCards/
+contact_tooltip = yes
+contact_tooltip_pretty = yes
 
 [auth]
 gmail = alias@gmail.com
