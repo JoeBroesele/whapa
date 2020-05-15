@@ -7,10 +7,13 @@ import sqlite3
 import os
 import sys
 
+# Append library folder to Python path.
+sys.path.append(os.path.relpath(os.path.join(os.path.dirname(__file__), 'libs')))
 
-# Define global variable
+import whautils
 
-version = "1.0"
+# Define global variable.
+version = whautils.whamerge_version
 message_columns = [
     '_id', 'key_remote_jid','key_from_me','key_id','status','needs_push','data','timestamp','media_url','media_mime_type',
     'media_wa_type','media_size','media_name','media_caption','media_hash','media_duration','origin','latitude',

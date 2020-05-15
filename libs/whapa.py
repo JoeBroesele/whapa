@@ -20,6 +20,7 @@ sys.path.append(os.path.relpath(os.path.join(os.path.dirname(__file__), 'libs'))
 import whautils
 
 # Define global variables.
+version = whautils.whapa_version
 arg_user = ""
 arg_group = ""
 cursor = None
@@ -27,7 +28,6 @@ message = ""
 report_var = "None"
 report_html = ""
 report_group = ""
-version = "1.4"
 names_dict = {}            # names wa.db
 color = {}                 # participants color
 current_color = "#5586e5"  # default participant color
@@ -84,7 +84,7 @@ def status(st):
     elif st == 6:
         return Fore.YELLOW + "System message" + Fore.RESET, "&#128187;"
     elif st == 8 or st == 10:
-        return Fore.BLUE + "Audio played" + Fore.RESET, "<font color=\"#0000ff \">&#10004;&#10004;;</font>"   # 10 for me and 8 for target
+        return Fore.BLUE + "Audio played" + Fore.RESET, "<font color=\"#0000ff \">&#10004;&#10004;</font>"  # 10 for me and 8 for target
     elif st == 13 or st == 12:
         return Fore.BLUE + "Seen" + Fore.RESET, "<font color=\"#0000ff \">&#10004;&#10004;</font>"
     else:
@@ -121,14 +121,12 @@ def html_report_message(text):
 
 def linkify(text):
     """Search for URLs in a text and replace them with links."""
-    # Caution: vCards can contain URLs, that become part of the tooltip, if
-    # these are enabled. These must *NOT* be linkified!
-    VCARD_REGEX = re.compile("""<a href=".*" title=".*">.* vCard.*</a>$""")
-    if VCARD_REGEX.search(text):
-        return text
     # Code found here:
     # https://stackoverflow.com/questions/1071191/detect-urls-in-a-string-and-wrap-with-a-href-tag
-    URL_REGEX = re.compile(r'''((?:mailto:|ftp://|http[s]?://)[^ <>'"{}|\\^`[\]]*)''')
+    # Improved regex pattern found here:
+    # https://www.w3resource.com/python-exercises/re/python-re-exercise-42.php
+    #URL_REGEX = re.compile(r'''((?:mailto:|ftp://|http[s]?://)[^ <>'"{}|\\^`[\]]*)''')
+    URL_REGEX = re.compile(r'''((?:mailto:|ftp://|http[s]?://)(?:[a-zA-Z]|[0-9]|[$-_@.&+~#]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)''')
     return URL_REGEX.sub(r'<a href="\1" target="_blank">\1</a>', text)
 
 
@@ -142,7 +140,10 @@ def html_preview_file_size(file, tag_width, tag_height):
     try:
         image = Image.open(file)
         img_width, img_height = image.size
-        html_image_tag = "<img src=\"." + file + "\" alt=\"" + file + "\" "
+        html_image_tag = "<img src=\"." + file
+        if settings['html_img_alt_enable']:
+            html_image_tag += "\" alt=\"" + file
+        html_image_tag += "\" "
         # If the image is in portrait format, set a fixed width.
         if img_width < img_height:
             html_image_tag += "width=\"{0:d}\"".format(tag_width)
@@ -153,7 +154,9 @@ def html_preview_file_size(file, tag_width, tag_height):
         return html_image_tag
     except Exception as e:
         # In case of an exception, return a default string.
-        return "<img src=\"." + file + "\" alt=\"" + file + "\" height=\"{0:d}\"/>".format(tag_height)
+        if settings['html_img_alt_enable']:
+            return "<img src=\"." + file + "\" alt=\"" + file + "\" height=\"{0:d}\"/>".format(tag_height)
+        return "<img src=\"." + file + "\" height=\"{0:d}\"/>".format(tag_height)
 
 
 def profile_picture(group_id, user_id):
@@ -423,16 +426,21 @@ def participants(obj):
 
 
 def report(obj, html):
-    """Function that makes the report """
-    if report_var == 'EN':
-        rep_ini = """<!DOCTYPE html>
+    """Function that generates the report."""
+    rep_ini = """<!DOCTYPE html>
 <html lang=""" + "\"" + report_var + "\"" + """>
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Report made with WhatsApp Parser Tool">
+    <meta name="description" content="""
+    rep_ini += "\""
+    if report_var == 'ES':
+        rep_ini += "Informe creado por"
+    else:
+        rep_ini += "Report created by"
+    rep_ini += " WhatsApp Parser Tool v" + version + """">
     <meta name="author" content="B16f00t">
     <link rel="shortcut icon" href="../images/logo.png">
     <title>WhatsApp Parser Tool v""" + version + """ Report - """ + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """</title>
@@ -460,119 +468,35 @@ def report(obj, html):
 </head>
 
 <body"""
-        if settings['bg_report']:
-            rep_ini += " background=\"." + settings['bg_report'] + "\""
-        rep_ini += """>
+    if settings['bg_report']:
+        rep_ini += " background=\"." + settings['bg_report'] + "\""
+    rep_ini += """>
     <!-- Fixed navbar -->
     <div class="container theme-showcase">
         <div class="header">"""
-        if settings['logo']:
-            rep_ini += """
-            <table style="width:100%">
-                <h1 align="left"><img src=".""" + settings['logo'] + "\" alt=\"." + settings['logo'] + \
-                    "\" height=\"" + settings['logo_height'] + "\" align=\"center\">&nbsp;" + settings['company'] + "</h1>"
-            if settings['record'] + settings['unit'] + settings['examiner'] + settings['notes']:
-                rep_ini += """
-                <tr>
-                    <th>Record</th>
-                    <th>Unit / Company</th>
-                    <th>Examiner</th>
-                    <th>Date</th>
-                </tr>
-                <tr>
-                    <td>""" + settings['record'] + """</td>
-                    <td>""" + settings['unit'] + """</td>
-                    <td>""" + settings['examiner'] + """</td>
-                    <td>""" + time.strftime('%d-%m-%Y', time.localtime()) + """</td>
-                </tr>
-                <tr>
-                    <th colspan="4">Notes</th>
-                </tr>
-                <tr>
-                    <td colspan="4">""" + settings['notes'] + """</td>
-                </tr>"""
-        if settings['logo']:
-            rep_ini += """
-            </table>"""
-        if settings['profile_pics_enable']:
-            rep_ini += """
-            <table style="width:100%;">
-                <tr>
-                <td style="border:none; padding:0px;"></td>
-                <td style="border:none; text-align:center; padding:0px; font-family:none; width:1%;">
-                    <a href=".""" + profile_picture(arg_group, arg_user) + "\"><img src=\"." + profile_picture(arg_group, arg_user) + "\" alt=\"." + profile_picture(arg_group, arg_user) + \
-                        "\" height=\"" + settings['profile_pics_size_report'] + """" align="right" style="padding-right:20px;"></a>
-                </td>
-                <td style="border:none; text-align:center; padding:0px; font-family:none; width:1%; white-space:nowrap;">
-                    <h2 align=center>Chat</h2>
-                    <h3 align=center>""" + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """</h3>
-                </td>
-                <td style="border:none; padding:0px;"></td>
-                </tr>
-            </table>"""
-        else:
-            rep_ini += """
-            <h2 align=center>Chat</h2>
-            <h3 align=center>""" + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """</h3>"""
+    if settings['logo']:
         rep_ini += """
-            """ + report_group + """
-        </div>
-        <ul>"""
-
-    elif report_var == 'ES':
-        rep_ini = """<!DOCTYPE html>
-<html lang=""" + "\"" + report_var + "\"" + """>
-
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Informe creado por WhatsApp Parser Tool">
-    <meta name="author" content="B16f00t">
-    <link rel="shortcut icon" href="../images/logo.png">
-    <title>WhatsApp Parser Tool v""" + version + """ Report - """ + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """</title>
-    <!-- Custom styles for this template -->
-    <link href="../cfg/chat.css" rel="stylesheet">
-    <style>
-    table {
-        font-family: arial, sans-serif;
-        border-collapse: collapse;
-        width: 100%;
-    }
-    td, th {
-        border: 1px solid #000000;
-        text-align: left;
-        padding: 8px;
-    }
-    tr:nth-child(even) {
-        background-color: #cdcdcd;
-    }
-    #map {
-        height: 100px;
-        width: 100%;
-    }
-    </style>
-</head>
-
-<body"""
-        if settings['bg_report']:
-            rep_ini += " background=\"." + settings['bg_report'] + "\""
-        rep_ini += """>
-    <!-- Fixed navbar -->
-    <div class="container theme-showcase">
-        <div class="header">"""
-        if settings['logo']:
-            rep_ini += """
+            <h1 align="left"><img src=".""" + settings['logo']
+        if settings['html_img_alt_enable']:
+            rep_ini += "\" alt=\"." + settings['logo']
+        rep_ini += "\" height=\"" + settings['logo_height'] + "\" align=\"center\">&nbsp;" + settings['company'] + "</h1>"
+    if settings['record'] + settings['unit'] + settings['examiner'] + settings['notes']:
+        rep_ini += """
             <table style="width:100%">
-                <h1 align="left"><img src=".""" + settings['logo'] + "\" alt=\"." + settings['logo'] + \
-                    "\" height=\"" + settings['logo_height'] + "\" align=\"center\">&nbsp;" + settings['company'] + "</h1>"
-            if settings['record'] + settings['unit'] + settings['examiner'] + settings['notes']:
-                rep_ini += """
-                <tr>
+                <tr>"""
+        if report_var == 'ES':
+            rep_ini += """
                     <th>Registro</th>
                     <th>Unidad / Compañia</th>
                     <th>Examinador</th>
-                    <th>Fecha</th>
+                    <th>Fecha</th>"""
+        else:
+            rep_ini += """
+                    <th>Record</th>
+                    <th>Unit / Company</th>
+                    <th>Examiner</th>
+                    <th>Date</th>"""
+        rep_ini += """
                 </tr>
                 <tr>
                     <td>""" + settings['record'] + """</td>
@@ -581,36 +505,58 @@ def report(obj, html):
                     <td>""" + time.strftime('%d-%m-%Y', time.localtime()) + """</td>
                 </tr>
                 <tr>
-                    <th colspan="4">Observaciones</th>
+                    <th colspan="4">"""
+        if report_var == 'ES':
+            rep_ini += "Observaciones"
+        else:
+            rep_ini += "Notes"
+        rep_ini += """</th>
                 </tr>
                 <tr>
                     <td colspan="4">""" + settings['notes'] + """</td>
-                </tr>"""
-        if settings['logo']:
-            rep_ini += """
+                </tr>
             </table>"""
         if settings['profile_pics_enable']:
             rep_ini += """
+            <br>"""
+    if settings['profile_pics_enable']:
+        rep_ini += """
+            <br>
             <table style="width:100%;">
                 <tr>
                 <td style="border:none; padding:0px;"></td>
                 <td style="border:none; text-align:center; padding:0px; font-family:none; width:1%;">
-                    <a href=".""" + profile_picture(arg_group, arg_user) + "\"><img src=\"." + profile_picture(arg_group, arg_user) + "\" alt=\"." + profile_picture(arg_group, arg_user) + \
-                        "\" height=\"" + settings['profile_pics_size_report'] + """" align="right" style="padding-right:20px;"></a>
+                    <a href=".""" + profile_picture(arg_group, arg_user) + "\"><img src=\"." + profile_picture(arg_group, arg_user)
+        if settings['html_img_alt_enable']:
+            rep_ini += "\" alt=\"." + profile_picture(arg_group, arg_user)
+        rep_ini += "\" height=\"" + settings['profile_pics_size_report'] + """" align="right" style="padding-right:20px;"></a>
                 </td>
                 <td style="border:none; text-align:center; padding:0px; font-family:none; width:1%; white-space:nowrap;">
-                    <h2 align=center>Conversación</h2>
+                    <h2 align=center>"""
+        if report_var == 'ES':
+            rep_ini += "Conversación"
+        else:
+            rep_ini += "Chat"
+        rep_ini +="""</h2>
                     <h3 align=center>""" + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """</h3>
                 </td>
                 <td style="border:none; padding:0px;"></td>
                 </tr>
-            </table>"""
-        else:
-            rep_ini += """
-            <h2 align=center>Conversación</h2>
-            <h3 align=center>""" + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """</h3>"""
+            </table>
+            <br>"""
+    else:
         rep_ini += """
-            """ + report_group + """
+            <h2 align=center>"""
+        if report_var == 'ES':
+            rep_ini += "Conversación"
+        else:
+            rep_ini += "Chat"
+        rep_ini +="""</h2>
+            <h3 align=center>""" + arg_group + gets_name(arg_group) + arg_user + gets_name(arg_user + "@s.whatsapp.net") + """</h3>"""
+    if report_group:
+        rep_ini += """
+            """ + report_group
+    rep_ini += """
         </div>
         <ul>"""
 
@@ -635,15 +581,20 @@ def report(obj, html):
 
 def index_report(obj, html):
     """Function that makes the index report """
-    if report_var == "ES":
-        rep_ini = """<!DOCTYPE html>
+    rep_ini = """<!DOCTYPE html>
 <html lang=""" + "\"" + report_var + "\"" + """>
 
 <head>
     <meta charset="utf-8">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Informe realizado con WhatsApp Parser Tool">
+    <meta name="description" content="""
+    rep_ini += "\""
+    if report_var == 'ES':
+        rep_ini += "Índice del informe creado por"
+    else:
+        rep_ini += "Report index created by"
+    rep_ini += " WhatsApp Parser Tool v" + version + """">
     <meta name="author" content="B16f00t">
     <link rel="shortcut icon" href="../images/logo.png">
     <title>WhatsApp Parser Tool v""" + version + """ - Report Index</title>
@@ -671,71 +622,24 @@ def index_report(obj, html):
 </head>
 
 <body"""
-        if settings['bg_index']:
-            rep_ini += " background=\"." + settings['bg_index'] + "\""
-        rep_ini += """>
+    if settings['bg_index']:
+        rep_ini += " background=\"." + settings['bg_index'] + "\""
+    rep_ini += """>
     <!-- Fixed navbar -->
     <div class="containerindex theme-showcase">"""
-        if settings['logo']:
-            rep_ini += """
-        <h1 align="left"><img src=".""" + settings['logo'] + "\" alt=\"." + settings['logo'] + "\" height=\"" + settings['logo_height'] + "\" align=\"center\">&nbsp;" + settings['company'] + "</h1>"
+    if settings['logo']:
         rep_ini += """
-        <h2 align=center>Listado de conversaciones</h2>
-        <div class="header">
-            <table style="width:100%">""" + obj + """
-            </table>
-        </div>
-    </div><!-- /containerindex -->
-</body>
-</html>
-"""
-
-    elif report_var == "EN":
-        rep_ini = """<!DOCTYPE html>
-<html lang=""" + "\"" + report_var + "\"" + """>
-
-<head>
-    <meta charset="utf-8">
-    <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta name="description" content="Report made with WhatsApp Parser Tool">
-    <meta name="author" content="B16f00t">
-    <link rel="shortcut icon" href="../images/logo.png">
-    <title>WhatsApp Parser Tool v""" + version + """ - Report Index</title>
-    <!-- Custom styles for this template -->
-    <link href="../cfg/chat.css" rel="stylesheet">
-    <style>
-    table {
-        font-family: arial, sans-serif;
-        border-collapse: collapse;
-        width: 100%;
-    }
-    td, th {
-        border: 1px solid #dddddd;
-        text-align: left;
-        padding: 8px;
-    }
-    tr:nth-child(even) {
-        background-color: #dddddd;
-    }
-    #map {
-        height: 100px;
-        width: 100%;
-    }
-    </style>
-</head>
-
-<body"""
-        if settings['bg_index']:
-            rep_ini += " background=\"." + settings['bg_index'] + "\""
-        rep_ini += """>
-    <!-- Fixed navbar -->
-    <div class="containerindex theme-showcase">"""
-        if settings['logo']:
-            rep_ini += """
-        <h1 align="left"><img src=".""" + settings['logo'] + "\" alt=\"." + settings['logo'] + "\" height=\"" + settings['logo_height'] + "\" align=\"center\">&nbsp;" + settings['company'] + "</h1>"
-        rep_ini += """
-        <h2 align=center>Chats List</h2>
+        <h1 align="left"><img src=".""" + settings['logo']
+        if settings['html_img_alt_enable']:
+            rep_ini += "\" alt=\"." + settings['logo']
+        rep_ini += "\" height=\"" + settings['logo_height'] + "\" align=\"center\">&nbsp;" + settings['company'] + "</h1>"
+    rep_ini += """
+        <h2 align=center>"""
+    if report_var == 'ES':
+        rep_ini += "Listado de conversaciones"
+    else:
+        rep_ini += "Chats List"
+    rep_ini += """</h2>
         <div class="header">
             <table style="width:100%">""" + obj + """
             </table>
@@ -853,7 +757,7 @@ def reply(_id):
             else:
                 thumb = (b"./" + chain[i:b]).decode('UTF-8', 'ignore')
             if (report_var == 'EN') or (report_var == 'ES'):
-                reply_msj += "<br>" + thumb + " " + size_file(rep[9]) + " - " + duration_file(rep[12]) + "<br></br><audio controls><source src=\"." + thumb + "\" type=\"" + rep[7] + "\"</audio>"
+                reply_msj += "<br>" + thumb + " " + size_file(rep[9]) + " - " + duration_file(rep[12]) + "<br><audio controls><source src=\"." + thumb + "\" type=\"" + rep[7] + "\"></audio>"
             else:
                 ans += Fore.RED + " - Name: " + Fore.RESET + thumb + "\n"
                 ans += Fore.RED + "Type: " + Fore.RESET + rep[7] + Fore.RED + " - Size: " + Fore.RESET + str(rep[9]) + " bytes " + size_file(rep[9]) + Fore.RED + " - Duration: " + Fore.RESET + duration_file(rep[12]) + "\n"
@@ -1503,13 +1407,13 @@ def messages(consult, rows, report_html):
 
                             if data[21] and int(data[21]) > 0:  # Reply
                                 if (report_var == 'EN') or (report_var == 'ES'):
-                                    report_msj = "<p style=\"border-left: 6px solid blue; background-color: lightgrey;border-radius:5px;\";>" + \
-                                                 reply(data[21])[1] + "</p>"
+                                    report_msj = "<p style=\"border-left: 6px solid blue; background-color: lightgrey;border-radius:5px;\">" + \
+                                                 linkify(reply(data[21])[1]) + "</p>"
                                 else:
                                     message += Fore.RED + "Replying to: " + Fore.RESET + reply(data[21])[0] + "\n"
 
                             if (report_var == 'EN') or (report_var == 'ES'):
-                                report_msj += html.escape(data[4])
+                                report_msj += linkify(html.escape(data[4]))
                             else:
                                 message += Fore.GREEN + "Message: " + Fore.RESET + data[4] + "\n"
 
@@ -1560,6 +1464,8 @@ def messages(consult, rows, report_html):
                         if (report_var == 'EN') or (report_var == 'ES'):
                             report_msj += "<br><a href=\"." + thumb + "\" target=\"_self\">" + html_preview_file(thumb) + "</a>"
 
+                        report_msj = linkify(report_msj)
+
                     elif int(data[8]) == 2:  # media_wa_type 2, Audio
                         chain = data[17].split(b'\x77\x02')[0]
                         i = chain.rfind(b"Media/")
@@ -1570,10 +1476,12 @@ def messages(consult, rows, report_html):
                             thumb = (b"./" + chain[i:b]).decode('UTF-8', 'ignore')
 
                         if (report_var == 'EN') or (report_var == 'ES'):
-                            report_msj += "<br>" + thumb + " " + size_file(data[9]) + " - " + duration_file(data[12]) + "<br></br><audio controls><source src=\"." + thumb + "\" type=\"" + data[7] + "\"</audio>"
+                            report_msj += "<br>" + thumb + " " + size_file(data[9]) + " - " + duration_file(data[12]) + "<br><audio controls><source src=\"." + thumb + "\" type=\"" + data[7] + "\"></audio>"
                         else:
                             message += Fore.GREEN + "Name: " + Fore.RESET + thumb + "\n"
                             message += Fore.GREEN + "Type: " + Fore.RESET + data[7] + Fore.GREEN + " - Size: " + Fore.RESET + str(data[9]) + " bytes " + size_file(data[9]) + Fore.GREEN + " - Duration: " + Fore.RESET + duration_file(data[12]) + "\n"
+
+                        report_msj = linkify(report_msj)
 
                     elif int(data[8]) == 3:  # media_wa_type 3 Video
                         chain = data[17].split(b'\x77\x02')[0]
@@ -1635,6 +1543,8 @@ def messages(consult, rows, report_html):
                         if (report_var == 'EN') or (report_var == 'ES'):
                             report_msj += "<br/><a href=\"." + thumb + "\" target=\"_self\">" + html_preview_file(thumb + ".jpg") + "</a>"
 
+                        report_msj = linkify(report_msj)
+
                     elif int(data[8]) == 4:  # media_wa_type 4, Contact
                         vcard_data, vcard_names = vcard_data_extract(data[4])
                         vcard_tooltip = html_vcard_tooltip(vcard_data)
@@ -1673,6 +1583,8 @@ def messages(consult, rows, report_html):
                                     report_msj += html.escape(data[10]) + "<br>"
                                 else:
                                     message += Fore.GREEN + "Name: " + Fore.RESET + data[10] + "\n"
+
+                        report_msj = linkify(report_msj)
 
                         if (report_var == 'EN') or (report_var == 'ES'):
                             report_msj += "<iframe width=\"300\" height=\"150\" id=\"gmap_canvas\" src=\"https://maps.google.com/maps?q={}%2C{}&t=&z=15&ie=UTF8&iwloc=&output=embed\" frameborder=\"0\" scrolling=\"no\" marginheight=\"0\" marginwidth=\"0\"></iframe>".format(str(data[13]), str(data[14]))
@@ -1739,6 +1651,8 @@ def messages(consult, rows, report_html):
 
                         if (report_var == 'EN') or (report_var == 'ES'):
                             report_msj += "<br><a href=\"." + thumb + "\" target=\"_self\">" + html_preview_file(thumb + ".jpg") + "</a>"
+
+                        report_msj = linkify(report_msj)
 
                     elif int(data[8]) == 10:  # media_wa_type 10, Video/Audio call lost
                         if report_var == 'EN':
@@ -1815,6 +1729,8 @@ def messages(consult, rows, report_html):
 
                         if (report_var == 'EN') or (report_var == 'ES'):
                             report_msj += "<br><a href=\"." + thumb + "\" target=\"_self\">" + html_preview_file(thumb + ".jpg") + "</a>"
+
+                        report_msj = linkify(report_msj)
 
                     elif int(data[8]) == 14:  # media_wa_type 14  Vcard multiples
                         vcard_data, vcard_names = vcard_data_extract(data[19])
@@ -1897,7 +1813,7 @@ def messages(consult, rows, report_html):
                             rep_med += """
             <li>
                 <div class="bubble2">
-                    <span class="personSay2">""" + linkify(html_report_message(report_msj)) + """</span><br>
+                    <span class="personSay2">""" + html_report_message(report_msj) + """</span><br>
                     <span class="time2 round">""" + report_time + "&nbsp;" + report_status + """</span><br>
                 </div>
             </li>"""
@@ -1914,7 +1830,7 @@ def messages(consult, rows, report_html):
             <li>
                 <div class="bubble">
                     <span class="personName">""" + report_name + """</span><br>
-                    <span class="personSay">""" + linkify(html_report_message(report_msj)) + """</span><br>
+                    <span class="personSay">""" + html_report_message(report_msj) + """</span><br>
                     <span class="time round">""" + report_time + "&nbsp;" + report_status + """</span><br>
                 </div>
             </li>"""
@@ -2033,13 +1949,13 @@ def info(opt):
                     rep_med += """
                                        <li>
                                        <div class="bubble2"><span class="personName">""" + report_name + """</span><br>
-                                           <span class="personSay2">""" + linkify(html_report_message(report_msj)) + """</span></div>
+                                           <span class="personSay2">""" + html_report_message(report_msj) + """</span></div>
                                        <span class=" time2 round ">""" + report_time + "&nbsp;" + report_status + """</span></li>"""
                 else:
                     rep_med += """
                                        <li>
                                        <div class="bubble"><span class="personName2">""" + report_name + """</span><br>
-                                           <span class="personSay">""" + linkify(html_report_message(report_msj)) + """</span></div>
+                                           <span class="personSay">""" + html_report_message(report_msj) + """</span></div>
                                        <span class=" time round ">""" + report_time + "&nbsp;" + report_status + """</span></li>"""
             elif report_var == 'ES':
                 report_time = time.strftime('%d-%m-%Y %H:%M', time.localtime(data[2] / 1000))
@@ -2047,13 +1963,13 @@ def info(opt):
                     rep_med += """
                                        <li>
                                        <div class="bubble2"><span class="personName">""" + report_name + """</span><br>
-                                           <span class="personSay2">""" + linkify(html_report_message(report_msj)) + """</span></div>
+                                           <span class="personSay2">""" + html_report_message(report_msj) + """</span></div>
                                        <span class=" time2 round ">""" + report_time + "&nbsp;" + report_status + """</span></li>"""
                 else:
                     rep_med += """
                                        <li>
                                        <div class="bubble"><span class="personName2">""" + report_name + """</span><br>
-                                           <span class="personSay">""" + linkify(html_report_message(report_msj)) + """</span></div>
+                                           <span class="personSay">""" + html_report_message(report_msj) + """</span></div>
                                        <span class=" time round ">""" + report_time + "&nbsp;" + report_status + """</span></li>"""
             else:
                 print(message)
@@ -2287,7 +2203,10 @@ if __name__ == "__main__":
                         if i.split('@')[1] == "g.us":
                             report_med += report_med_newline
                             if settings['profile_pics_enable']:
-                                profile_picture_img_tag = "<img src=\"." + profile_picture(i, "") + "\" alt=\"." + profile_picture(i, "") + "\" height=\"" + settings['profile_pics_size_index'] + "\" style=\"padding-right:10px; vertical-align:middle;\">"
+                                profile_picture_img_tag = "<img src=\"." + profile_picture(i, "")
+                                if settings['html_img_alt_enable']:
+                                    profile_picture_img_tag += "\" alt=\"." + profile_picture(i, "")
+                                profile_picture_img_tag += "\" height=\"" + settings['profile_pics_size_index'] + "\" style=\"padding-right:10px; vertical-align:middle;\">"
                             if report_var == 'EN':
                                 report_med_group = "Group"
                             elif report_var == 'ES':
@@ -2309,7 +2228,10 @@ if __name__ == "__main__":
                         elif i.split('@')[1] == "s.whatsapp.net":
                             report_med += report_med_newline
                             if settings['profile_pics_enable']:
-                                profile_picture_img_tag = "<img src=\"." + profile_picture("", i.split('@')[0]) + "\" alt=\"." + profile_picture("", i.split('@')[0]) + "\" height=\"" + settings['profile_pics_size_index'] + "\" style=\"padding-right:10px; vertical-align:middle;\">"
+                                profile_picture_img_tag = "<img src=\"." + profile_picture("", i.split('@')[0])
+                                if settings['html_img_alt_enable']:
+                                    profile_picture_img_tag += "\" alt=\"." + profile_picture("", i.split('@')[0])
+                                profile_picture_img_tag += "\" height=\"" + settings['profile_pics_size_index'] + "\" style=\"padding-right:10px; vertical-align:middle;\">"
                             if report_var == 'EN':
                                 report_med_user = "User"
                             elif report_var == 'ES':

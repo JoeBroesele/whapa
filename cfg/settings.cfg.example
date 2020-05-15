@@ -1,4 +1,4 @@
-# WhatsApp Parser Toolset v1.16 settings file.
+# WhatsApp Parser Toolset v1.19 settings file.
 
 [report]
 logo = ./cfg/logo.png
@@ -21,6 +21,7 @@ profile_pic_group = ./images/profile-pic-group.jpg
 contact_vcard_dir = ./Media/Contact vCards/
 contact_tooltip = yes
 contact_tooltip_pretty = yes
+html_img_alt_enable = no
 
 [auth]
 gmail = alias@gmail.com

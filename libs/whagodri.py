@@ -18,7 +18,7 @@ sys.path.append(os.path.relpath(os.path.join(os.path.dirname(__file__), 'libs'))
 import whautils
 
 # Define global variables.
-version = "1.2"
+version = whautils.whagodri_version
 exitFlag = 0
 nextPageToken = ""
 backups = []
@@ -59,7 +59,6 @@ def getConfigs():
         whautils.create_settings_file()
         # Read the settings from the settings file.
         settings = whautils.read_settings_file()
-        passw = settings['passw']
         if not whautils.check_google_password():
             settings['passw'] = getpass.getpass(prompt="Google password for account '" + settings['gmail'] + "': ", stream=None)
         if not settings['passw']:

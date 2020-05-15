@@ -16,7 +16,7 @@ li, img, table {
 }
 
 
-body { padding-top:30px; }
+body { padding-top:0px; }
 .widget .panel-body { padding:0px; }
 .widget .list-group { margin-bottom:0; }
 .widget .panel-title { display:inline; }
@@ -27,7 +27,7 @@ body { padding-top:30px; }
 .widget .action { margin-top:5px; }
 .widget .comment-text { font-size:12px; }
 .widget .btn-block { border-top-left-radius:0px; border-top-right-radius:0px; }
-.header { padding:10px; }
+.header { padding-left:10px; padding-right:10px; }
 .col-xs-2 .col-md-1 img { padding-right:20px; color:#FFFFFF; }
 .row img { float:left; padding-right:4px; padding-left:4px; }
 

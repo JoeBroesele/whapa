@@ -16,10 +16,10 @@ sys.path.append(os.path.relpath(os.path.join(os.path.dirname(__file__), 'libs'))
 import whautils
 
 # Define global variables.
+version = whautils.whapa_gui_version
 author = 'B16f00t'
 title = 'WhatsApp Parser Toolset'
 contact = "http://t.me/b16f00t"
-version = '1.18'
 system = ""
 
 class ToolTip(object):

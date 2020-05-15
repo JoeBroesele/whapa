@@ -4,13 +4,25 @@ All notable changes to this project will be documented in this file.
 
 May 2020
 
+    [+] General:
+        [-] Central definition of versions in 'whautils.py'.
+    [+] whapa-gui.py v1.19
+        [-] Version number incremented.
+    [+] whapa.py v1.5
+        [-] Option added to turn the HTML 'alt' tag for images on or off. If off, a broken image
+            symbol will be displayed instead of the alternative text, which may be preferrable.
+        [-] Improved generation of links from URLs in messages.
+        [-] Unified HTML report templates for English and Spanish.
+        [-] Several improvements and fixes in the generation of the reports.
+
     [+] whapa-gui.py v1.18
         [-] Version number incremented.
     [+] whapa.py v1.4
         [-] Better differentiation of system messages, eliminating some errors.
         [-] Line breaks in messages are now displayed in the report.
         [-] Optimized the HTML layout of the reports.
-        [-] Improved processing of contact vCards.
+        [-] Improved processing of contact vCards with the option to save them as files and
+            display the vCard information on tooltips in raw and pretty format.
 
     [+] whapa-gui.py v1.17
         [-] Improved update notification.
@@ -124,3 +136,4 @@ February 2018
     [i] whapa.py v0.1
         [-] Fixed minor bugs
         [-] Added whapas.py
+

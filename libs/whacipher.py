@@ -8,9 +8,13 @@ import os
 #from Crypto.Cipher import AES
 from Cryptodome.Cipher import AES
 
+# Append library folder to Python path.
+sys.path.append(os.path.relpath(os.path.join(os.path.dirname(__file__), 'libs')))
 
-# Define global variable
-version = "1.1"
+import whautils
+
+# Define global variables.
+version = whautils.whacipher_version
 output = ""
 
 def banner():

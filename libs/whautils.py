@@ -4,7 +4,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 05 May 2020
-# Rev.: 14 May 2020
+# Rev.: 15 May 2020
 #
 # Utility library for the WhatsApp Parser Toolset.
 #
@@ -16,6 +16,11 @@ import sys
 from configparser import ConfigParser
 
 # Define global variables.
+whacipher_version   = "1.1"
+whagodri_version    = "1.2"
+whamerge_version    = "1.0"
+whapa_version       = "1.5"
+whapa_gui_version   = "1.19"
 settings = {
     # Section 'report'.
     "logo":                     "",
@@ -37,6 +42,7 @@ settings = {
     "contact_vcard_dir":        "",
     "contact_tooltip":          "",
     "contact_tooltip_pretty":   "",
+    "html_img_alt_enable":      "",
     # Section 'auth'.
     "gmail":                    "",
     "passw":                    "",
@@ -58,7 +64,7 @@ settingsFile = os.path.relpath(os.path.dirname(__file__) + "/../cfg/settings.cfg
 def create_settings_file():
     """Function that creates the settings file."""
     settingsDefault = """\
-# WhatsApp Parser Toolset v1.16 settings file.
+# WhatsApp Parser Toolset v""" + whapa_gui_version + """ settings file.
 
 [report]
 logo = ./cfg/logo.png
@@ -81,6 +87,7 @@ profile_pic_group = ./images/profile-pic-group.jpg
 contact_vcard_dir = ./Media/Contact vCards/
 contact_tooltip = yes
 contact_tooltip_pretty = yes
+html_img_alt_enable = no
 
 [auth]
 gmail = alias@gmail.com
@@ -133,6 +140,7 @@ def read_settings_file():
         settings['contact_vcard_dir']       = config.get('report', 'contact_vcard_dir')
         settings['contact_tooltip']         = config.get('report', 'contact_tooltip')
         settings['contact_tooltip_pretty']  = config.get('report', 'contact_tooltip_pretty')
+        settings['html_img_alt_enable']     = config.get('report', 'html_img_alt_enable')
         # Section 'auth'.
         settings['gmail']                   = config.get('auth', 'gmail')
         settings['passw']                   = config.get('auth', 'passw')
@@ -151,6 +159,7 @@ def read_settings_file():
         settings['profile_pics_enable']     = bool(settings['profile_pics_enable'].lower() in bool_true_list)
         settings['contact_tooltip']         = bool(settings['contact_tooltip'].lower() in bool_true_list)
         settings['contact_tooltip_pretty']  = bool(settings['contact_tooltip_pretty'].lower() in bool_true_list)
+        settings['html_img_alt_enable']     = bool(settings['html_img_alt_enable'].lower() in bool_true_list)
 
         return settings
     except Exception as e:
