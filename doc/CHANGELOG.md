@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 May 2020
 
+    [+] whapa-gui.py v1.20
+        [-] Option for reports in German added.
+    [+] whapa.py v1.6
+        [-] Reports can now be created in German.
+        [-] Fixed the Google real time location for reports in English.
+        [-] Some fixes and improvements, mainly related to support different languages.
+
     [+] General:
         [-] Central definition of versions in 'whautils.py'.
     [+] whapa-gui.py v1.19

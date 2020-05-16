@@ -77,14 +77,15 @@ class Whapa:
         self.iconmerge = PhotoImage(file=self.icons[15])
         self.icondecrypt = PhotoImage(file=self.icons[16])
         self.iconencrypt = PhotoImage(file=self.icons[17])
-        self.icones = PhotoImage(file=self.icons[18])
-        self.iconen = PhotoImage(file=self.icons[19])
-        self.iconparser = PhotoImage(file=self.icons[20])
-        self.iconone = PhotoImage(file=self.icons[21])
-        self.iconextract = PhotoImage(file=self.icons[22])
-        self.iconcall = PhotoImage(file=self.icons[23])
-        self.iconstatus = PhotoImage(file=self.icons[24])
-        self.iconrequire = PhotoImage(file=self.icons[25])
+        self.iconparser = PhotoImage(file=self.icons[18])
+        self.iconone = PhotoImage(file=self.icons[19])
+        self.iconextract = PhotoImage(file=self.icons[20])
+        self.iconcall = PhotoImage(file=self.icons[21])
+        self.iconstatus = PhotoImage(file=self.icons[22])
+        self.iconrequire = PhotoImage(file=self.icons[23])
+        self.icon_lang_es = PhotoImage(file=self.icons[24])
+        self.icon_lang_en = PhotoImage(file=self.icons[25])
+        self.icon_lang_de = PhotoImage(file=self.icons[26])
 
         # Menu Windows Property
         self.root.title(title + " v" + version)
@@ -211,12 +212,15 @@ class Whapa:
         self.whapa_but_rep_none = Radiobutton(self.frame_whapa_repo, text='  Terminal', image=self.iconone, variable=self.whapa_box_rep, value='None', anchor="w", compound='left')
         self.whapa_but_rep_none.config(bd=4, borderwidth=0, highlightthickness=0)
         self.whapa_but_rep_none.grid(row=0, column=0, padx=5, pady=5, sticky="nswe")
-        self.whapa_but_rep_es = Radiobutton(self.frame_whapa_repo, text='  Spanish', image=self.icones, variable=self.whapa_box_rep, value='ES', anchor="w", compound='left')
+        self.whapa_but_rep_es = Radiobutton(self.frame_whapa_repo, text='  Spanish', image=self.icon_lang_es, variable=self.whapa_box_rep, value='ES', anchor="w", compound='left')
         self.whapa_but_rep_es.config(bd=4, borderwidth=0, highlightthickness=0)
         self.whapa_but_rep_es.grid(row=1, column=0, padx=5, pady=5, sticky="nswe")
-        self.whapa_but_rep_en = Radiobutton(self.frame_whapa_repo, text='  English', image=self.iconen, variable=self.whapa_box_rep, value='EN', anchor="w", compound='left')
+        self.whapa_but_rep_en = Radiobutton(self.frame_whapa_repo, text='  English', image=self.icon_lang_en, variable=self.whapa_box_rep, value='EN', anchor="w", compound='left')
         self.whapa_but_rep_en.config(bd=4, borderwidth=0, highlightthickness=0,)
         self.whapa_but_rep_en.grid(row=2, column=0, padx=5, pady=5, sticky="nswe")
+        self.whapa_but_rep_de = Radiobutton(self.frame_whapa_repo, text='  German', image=self.icon_lang_de, variable=self.whapa_box_rep, value='DE', anchor="w", compound='left')
+        self.whapa_but_rep_de.config(bd=4, borderwidth=0, highlightthickness=0,)
+        self.whapa_but_rep_de.grid(row=0, column=1, padx=5, pady=5, sticky="nswe")
         self.whapa_box_rep.set("None")
 
         self.frame_whapa_filter = LabelFrame(self.tab1, text="Filters")
@@ -675,6 +679,8 @@ class Whapa:
             self.cmd += " -r ES"
         elif self.whapa_box_rep.get() == "EN":
             self.cmd += " -r EN"
+        elif self.whapa_box_rep.get() == "DE":
+            self.cmd += " -r DE"
         else:
             pass
 
@@ -723,6 +729,8 @@ class Whapa:
             self.cmd += " -r ES"
         elif self.whapa_box_rep.get() == "EN":
             self.cmd += " -r EN"
+        elif self.whapa_box_rep.get() == "DE":
+            self.cmd += " -r DE"
         else:
             pass
 
@@ -752,6 +760,8 @@ class Whapa:
             self.cmd += " -r ES"
         elif self.whapa_box_rep.get() == "EN":
             self.cmd += " -r EN"
+        elif self.whapa_box_rep.get() == "DE":
+            self.cmd += " -r DE"
         else:
             pass
 
@@ -772,6 +782,8 @@ class Whapa:
             self.cmd += " -r ES"
         elif self.whapa_box_rep.get() == "EN":
             self.cmd += " -r EN"
+        elif self.whapa_box_rep.get() == "DE":
+            self.cmd += " -r DE"
         else:
             pass
 
@@ -1040,14 +1052,15 @@ if __name__ == '__main__':
              img_folder + "merge.png",
              img_folder + "decrypt.png",
              img_folder + "encrypt.png",
-             img_folder + "spanish.png",
-             img_folder + "english.png",
              img_folder + "parser.png",
              img_folder + "terminal.png",
              img_folder + "extract.png",
              img_folder + "callslog.png",
              img_folder + "status.png",
-             img_folder + "requirements.png")
+             img_folder + "requirements.png",
+             img_folder + "spanish.png",
+             img_folder + "english.png",
+             img_folder + "german.png")
 
     for icon in icons:
         if not os.path.exists(icon):

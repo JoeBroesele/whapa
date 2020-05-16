@@ -2,7 +2,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 28 Apr 2020
-# Rev.: 07 May 2020
+# Rev.: 16 May 2020
 #
 # List of files to be ignored by git.
 #
@@ -40,6 +40,9 @@ wa.db
 
 # WhatsApp profile pictures.
 Profile Pictures/
+
+# Thumbnails extracted from the WhatsApp databeses
+thumbnails/
 
 # PDF directory.
 PDF/

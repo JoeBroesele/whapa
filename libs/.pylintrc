@@ -253,7 +253,7 @@ max-line-length=160
 
 # Maximum number of lines in a module
 #max-module-lines=1000
-max-module-lines=2500
+max-module-lines=3000
 
 # List of optional constructs for which whitespace checking is disabled. `dict-
 # separator` is used to allow tabulation in dicts, etc.: {1  : 1,\n222: 2}.
@@ -552,7 +552,8 @@ max-args=7
 max-attributes=500
 
 # Maximum number of boolean expressions in a if statement
-max-bool-expr=5
+#max-bool-expr=5
+max-bool-expr=10
 
 # Maximum number of branch for function / method body
 #max-branches=12

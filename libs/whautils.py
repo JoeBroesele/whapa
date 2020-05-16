@@ -4,7 +4,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 05 May 2020
-# Rev.: 15 May 2020
+# Rev.: 16 May 2020
 #
 # Utility library for the WhatsApp Parser Toolset.
 #
@@ -19,8 +19,8 @@ from configparser import ConfigParser
 whacipher_version   = "1.1"
 whagodri_version    = "1.2"
 whamerge_version    = "1.0"
-whapa_version       = "1.5"
-whapa_gui_version   = "1.19"
+whapa_version       = "1.6"
+whapa_gui_version   = "1.20"
 settings = {
     # Section 'report'.
     "logo":                     "",
