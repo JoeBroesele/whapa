@@ -43,6 +43,7 @@ settings = {
     "contact_tooltip":          "",
     "contact_tooltip_pretty":   "",
     "html_img_alt_enable":      "",
+    "html_img_noimage_pic":     "",
     # Section 'auth'.
     "gmail":                    "",
     "passw":                    "",
@@ -88,6 +89,7 @@ contact_vcard_dir = ./Media/Contact vCards/
 contact_tooltip = yes
 contact_tooltip_pretty = yes
 html_img_alt_enable = no
+html_img_noimage_pic = ./images/noimage.png
 
 [auth]
 gmail = alias@gmail.com
@@ -141,6 +143,7 @@ def read_settings_file():
         settings['contact_tooltip']         = config.get('report', 'contact_tooltip')
         settings['contact_tooltip_pretty']  = config.get('report', 'contact_tooltip_pretty')
         settings['html_img_alt_enable']     = config.get('report', 'html_img_alt_enable')
+        settings['html_img_noimage_pic']    = config.get('report', 'html_img_noimage_pic')
         # Section 'auth'.
         settings['gmail']                   = config.get('auth', 'gmail')
         settings['passw']                   = config.get('auth', 'passw')

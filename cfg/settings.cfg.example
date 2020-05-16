@@ -22,6 +22,7 @@ contact_vcard_dir = ./Media/Contact vCards/
 contact_tooltip = yes
 contact_tooltip_pretty = yes
 html_img_alt_enable = no
+html_img_noimage_pic = ./images/noimage.png
 
 [auth]
 gmail = alias@gmail.com

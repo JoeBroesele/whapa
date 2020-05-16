@@ -158,13 +158,13 @@ def html_preview_file_size(file, tag_width, tag_height):
         # If the image is in landscape format, set a fixed height.
         else:
             html_image_tag += "height=\"{0:d}\"".format(tag_height)
-        html_image_tag += "/>"
+        html_image_tag += " onError=\"this.onerror=null; this.src='." + settings['html_img_noimage_pic'] + "';\"/>"
         return html_image_tag
     except Exception as e:
         # In case of an exception, return a default string.
         if settings['html_img_alt_enable']:
-            return "<img src=\"." + file + "\" alt=\"" + file + "\" height=\"{0:d}\"/>".format(tag_height)
-        return "<img src=\"." + file + "\" height=\"{0:d}\"/>".format(tag_height)
+            return "<img src=\"." + file + "\" alt=\"" + file + "\" height=\"{0:d}\" onError=\"this.onerror=null; this.src='." + settings['html_img_noimage_pic'] + "';\"/>".format(tag_height)
+        return "<img src=\"." + file + "\" height=\"{0:d}\" onError=\"this.onerror=null; this.src='." + settings['html_img_noimage_pic'] + "';\"/>".format(tag_height)
 
 
 def profile_picture(group_id, user_id):
@@ -495,7 +495,7 @@ def report(obj, html):
             <h1 align="left"><img src=".""" + settings['logo']
         if settings['html_img_alt_enable']:
             rep_ini += "\" alt=\"." + settings['logo']
-        rep_ini += "\" height=\"" + settings['logo_height'] + "\" align=\"center\">&nbsp;" + settings['company'] + "</h1>"
+        rep_ini += "\" height=\"" + settings['logo_height'] + "\" align=\"center\" onError=\"this.onerror=null; this.src='." + settings['html_img_noimage_pic'] + "';\">&nbsp;" + settings['company'] + "</h1>"
     if settings['record'] + settings['unit'] + settings['examiner'] + settings['notes']:
         rep_ini += """
             <table style="width:100%">
@@ -553,7 +553,7 @@ def report(obj, html):
                     <a href=".""" + profile_picture(arg_group, arg_user) + "\"><img src=\"." + profile_picture(arg_group, arg_user)
         if settings['html_img_alt_enable']:
             rep_ini += "\" alt=\"." + profile_picture(arg_group, arg_user)
-        rep_ini += "\" height=\"" + settings['profile_pics_size_report'] + """" align="right" style="padding-right:20px;"></a>
+        rep_ini += "\" height=\"" + settings['profile_pics_size_report'] + """" align="right" style="padding-right:20px;" onError="this.onerror=null; this.src='.""" + settings['html_img_noimage_pic'] + """';"></a>
                 </td>
                 <td style="border:none; text-align:center; padding:0px; font-family:none; width:1%; white-space:nowrap;">
                     <h2 align=center>"""
@@ -662,7 +662,7 @@ def index_report(obj, html):
         <h1 align="left"><img src=".""" + settings['logo']
         if settings['html_img_alt_enable']:
             rep_ini += "\" alt=\"." + settings['logo']
-        rep_ini += "\" height=\"" + settings['logo_height'] + "\" align=\"center\">&nbsp;" + settings['company'] + "</h1>"
+        rep_ini += "\" height=\"" + settings['logo_height'] + "\" align=\"center\" onError=\"this.onerror=null; this.src='." + settings['html_img_noimage_pic'] + "';\">&nbsp;" + settings['company'] + "</h1>"
     rep_ini += """
         <h2 align=center>"""
     if report_var == 'ES':
@@ -2379,7 +2379,7 @@ if __name__ == "__main__":
                                 profile_picture_img_tag = "<img src=\"." + profile_picture(i, "")
                                 if settings['html_img_alt_enable']:
                                     profile_picture_img_tag += "\" alt=\"." + profile_picture(i, "")
-                                profile_picture_img_tag += "\" height=\"" + settings['profile_pics_size_index'] + "\" style=\"padding-right:10px; vertical-align:middle;\">"
+                                profile_picture_img_tag += "\" height=\"" + settings['profile_pics_size_index'] + "\" style=\"padding-right:10px; vertical-align:middle;\" onError=\"this.onerror=null; this.src='." + settings['html_img_noimage_pic'] + "';\">"
                             if report_var == 'EN':
                                 report_med_group = "Group"
                             elif report_var == 'ES':
@@ -2406,7 +2406,7 @@ if __name__ == "__main__":
                                 profile_picture_img_tag = "<img src=\"." + profile_picture("", i.split('@')[0])
                                 if settings['html_img_alt_enable']:
                                     profile_picture_img_tag += "\" alt=\"." + profile_picture("", i.split('@')[0])
-                                profile_picture_img_tag += "\" height=\"" + settings['profile_pics_size_index'] + "\" style=\"padding-right:10px; vertical-align:middle;\">"
+                                profile_picture_img_tag += "\" height=\"" + settings['profile_pics_size_index'] + "\" style=\"padding-right:10px; vertical-align:middle;\" onError=\"this.onerror=null; this.src='." + settings['html_img_noimage_pic'] + "';\">"
                             if report_var == 'EN':
                                 report_med_user = "User"
                             elif report_var == 'ES':

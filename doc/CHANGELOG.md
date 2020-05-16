@@ -10,6 +10,7 @@ May 2020
         [-] Reports can now be created in German.
         [-] Fixed the Google real time location for reports in English.
         [-] Some fixes and improvements, mainly related to support different languages.
+        [-] Error handling of missing picutres implemented.
 
     [+] General:
         [-] Central definition of versions in 'whautils.py'.
