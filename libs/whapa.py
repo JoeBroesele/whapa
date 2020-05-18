@@ -18,6 +18,7 @@ from PIL import Image
 sys.path.append(os.path.relpath(os.path.join(os.path.dirname(__file__), 'libs')))
 
 import whautils
+import whaemoji
 
 # Define global variables.
 version = whautils.whapa_version
@@ -124,7 +125,10 @@ def duration_file(obj):
 
 def html_report_message(text):
     """Format a message for an HMTL report."""
-    return text.replace("\r", "").replace("\n", "<br>\n")
+    # Set custom emoji, if enabled.
+    if settings['custom_emoji_enable']:
+        text = custom_emoji(text)
+    return text.replace("  ", "&nbsp;&nbsp;").replace("\r", "").replace("\n", "<br>\n")
 
 
 def linkify(text):
@@ -136,6 +140,63 @@ def linkify(text):
     #URL_REGEX = re.compile(r'''((?:mailto:|ftp://|http[s]?://)[^ <>'"{}|\\^`[\]]*)''')
     URL_REGEX = re.compile(r'''((?:mailto:|ftp://|http[s]?://)(?:[a-zA-Z]|[0-9]|[$-_@.&+~#]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)''')
     return URL_REGEX.sub(r'<a href="\1" target="_blank">\1</a>', text)
+
+
+def custom_emoji(text):
+    """Replace Unicode emoji in a text with custom emoji images."""
+    emoji = []
+    # White list emoji with code < u'\U00002000'.
+    emoji_filter_whitelist = [
+        u'\U00000023',  # E0.6 keycap: #
+        u'\U0000002A',  # E2.0 keycap: *
+        u'\U00000030', u'\U00000031', u'\U00000032', u'\U00000033', u'\U00000034',  # E0.6 keycap: 0..4
+        u'\U00000035', u'\U00000036', u'\U00000037', u'\U00000038', u'\U00000039',  # E0.6 keycap: 5..9
+        u'\U000000A9',  # E0.6 copyright
+        u'\U000000AE']  # E0.6 registered
+    # Search emoji in text.
+    i = 0
+    while i < len(text):
+        # For faster processing: Skip scanning the whole emoji list, if the
+        # current character is not potentially part of an emoji.
+        if text[i] < u'\U00002000' and text[i] not in emoji_filter_whitelist:
+            i += 1
+            continue
+        # Is the current sequence an emoji?
+        seq_is_emo = False
+        # The maximum emoji sequence length is 7, i.e. check the current
+        # character in combination with up to the next 6 ones.
+        for j in range(6, -1, -1):
+            if i + j < len(text):
+                # Improve performance (see above).
+                if text[i+j] < u'\U00002000' and text[i+j] not in emoji_filter_whitelist:
+                    continue
+                seq = text[i:i+j+1]
+                if seq in whaemoji.WHA_EMOJI:
+                    seq_is_emo = True
+                    i += j
+                    break
+        if seq_is_emo:
+            emoji.append(seq)
+        i += 1
+    text_emo = ""
+    for emo in emoji:
+        # Assemble the complete emoji name.
+        emoji_name = ""
+        for char in emo:
+            emoji_name += "{0:04X}-".format(ord(char))
+        emoji_name = emoji_name.rstrip("-")
+        # Set the name of the emoji image file.
+        emoji_image_file = os.path.join("." + settings['custom_emoji_dir'].rstrip('\/'), emoji_name + ".png")
+        # Assemble the HTML emoji image tag.
+        emoji_image_tag = "<img src=\"" + emoji_image_file + "\" alt=\"" + emo + "\" height=\"" + settings['custom_emoji_size'] + "\" style=\"vertical-align:middle;\">"
+        # Find position of the current emoji.
+        emoji_pos = text.find(emo)
+        # Add text and emoji to result string.
+        text_emo += text[:emoji_pos] + emoji_image_tag
+        # Remove processed characters from text.
+        text = text[emoji_pos + len(emo):]
+    text_emo += text
+    return text_emo
 
 
 def html_preview_file(file):
@@ -163,8 +224,8 @@ def html_preview_file_size(file, tag_width, tag_height):
     except Exception as e:
         # In case of an exception, return a default string.
         if settings['html_img_alt_enable']:
-            return "<img src=\"." + file + "\" alt=\"" + file + "\" height=\"{0:d}\" onError=\"this.onerror=null; this.src='." + settings['html_img_noimage_pic'] + "';\"/>".format(tag_height)
-        return "<img src=\"." + file + "\" height=\"{0:d}\" onError=\"this.onerror=null; this.src='." + settings['html_img_noimage_pic'] + "';\"/>".format(tag_height)
+            return "<img src=\"." + file + "\" alt=\"" + file + "\" height=\"{0:d}\" onError=\"this.onerror=null; this.src='.".format(tag_height) + settings['html_img_noimage_pic'] + "';\"/>"
+        return "<img src=\"." + file + "\" height=\"{0:d}\" onError=\"this.onerror=null; this.src='.".format(tag_height) + settings['html_img_noimage_pic'] + "';\"/>"
 
 
 def profile_picture(group_id, user_id):
@@ -220,7 +281,7 @@ def vcard_data_extract(vcard_data_bin):
 def html_vcard_tooltip(vcard_data):
     """Create an HTML tooltip (title) for vCard data."""
     vcard_tooltip = ""
-    if settings['contact_tooltip']:
+    if settings['contact_tooltip_enable']:
         # Raw vCard data as tooltip.
         if not settings['contact_tooltip_pretty']:
             vcard_tooltip = " title=\"" + html.escape(vcard_data).replace("\n", "&#10;") + "\""
@@ -346,7 +407,7 @@ def names(obj):
         print("wa database doesn't exist")
 
 
-def gets_name(obj):
+def gets_name(obj, *args):
     """Function recover a name of the wa.db"""
     if names_dict == {}:  # No exists wa.db
         return " "
@@ -363,10 +424,14 @@ def gets_name(obj):
                         list_broadcast.append(i)
                 else:
                     list_broadcast.append(i)
+            if settings['custom_emoji_enable'] and not args and (report_var == 'EN' or report_var == 'ES' or report_var == 'DE'):
+                return custom_emoji(" (" + ", ".join(list_broadcast) + ")")
             return " (" + ", ".join(list_broadcast) + ")"
         else:  # It's a string
             if obj in names_dict:
                 if names_dict[obj] is not None:
+                    if settings['custom_emoji_enable'] and not args and (report_var == 'EN' or report_var == 'ES' or report_var == 'DE'):
+                        return custom_emoji(" (" + names_dict[obj] + ")")
                     return " (" + names_dict[obj] + ")"
                 else:
                     return ""
@@ -523,8 +588,14 @@ def report(obj, html):
                 <tr>
                     <td>""" + settings['record'] + """</td>
                     <td>""" + settings['unit'] + """</td>
-                    <td>""" + settings['examiner'] + """</td>
-                    <td>""" + time.strftime('%d-%m-%Y', time.localtime()) + """</td>
+                    <td>""" + settings['examiner'] + "</td>"
+        if report_var == 'DE':
+            rep_ini += """
+                    <td>""" + time.strftime('%d.%m.%Y %H:%M:%S', time.localtime()) + "</td>"
+        else:
+            rep_ini += """
+                    <td>""" + time.strftime('%d-%m-%Y %H:%M:%S', time.localtime()) + "</td>"
+        rep_ini += """
                 </tr>
                 <tr>
                     <th colspan="4">"""
@@ -2005,12 +2076,12 @@ def messages(consult, rows, report_html):
                 </div>
             </li>"""
                     elif report_var == 'None':
-                        message += Fore.GREEN + "Timestamp: " + Fore.RESET + time.strftime('%d-%m-%Y %H:%M', time.localtime(data[5] / 1000)) + Fore.GREEN + " - Status: " + Fore.RESET + main_status + "\n"
+                        message += Fore.GREEN + "Timestamp: " + Fore.RESET + time.strftime('%d-%m-%Y %H:%M:%S', time.localtime(data[5] / 1000)) + Fore.GREEN + " - Status: " + Fore.RESET + main_status + "\n"
                         print(message)
                 n_mes += 1
 
             except Exception as e:
-                print("\nError showing message details: {}, Message ID {}, Timestamp {}".format(e, str(data[23]), time.strftime('%d-%m-%Y %H:%M', time.localtime(data[5] / 1000))))
+                print("\nError showing message details: {}, Message ID {}, Timestamp {}".format(e, str(data[23]), time.strftime('%d-%m-%Y %H:%M:%S', time.localtime(data[5] / 1000))))
                 n_mes += 1
                 continue
 
@@ -2036,7 +2107,7 @@ def info(opt):
         result = cursor.fetchone()
         print("Number of messages: {}".format(str(result[0])))
         sql_consult = cursor.execute(sql_string)
-        report_html = "./reports/" + settings['prefix'] + "status.html"
+        report_html = "./reports/" + settings['report_prefix'] + "status.html"
         messages(sql_consult, result[0], report_html)
         print("[i] Finished")
 
@@ -2044,12 +2115,12 @@ def info(opt):
         print(Fore.RED + "Calls" + Fore.RESET)
         rep_med = ""
         epoch_start = "0"
-        epoch_end = str(1000 * int(time.mktime(time.strptime(time.strftime('%d-%m-%Y %H:%M'), '%d-%m-%Y %H:%M'))))
+        epoch_end = str(1000 * int(time.mktime(time.strptime(time.strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S'))))
 
         if args.time_start:
-            epoch_start = 1000 * int(time.mktime(time.strptime(args.time_start, '%d-%m-%Y %H:%M')))
+            epoch_start = 1000 * int(time.mktime(time.strptime(args.time_start, '%d-%m-%Y %H:%M:%S')))
         if args.time_end:
-            epoch_end = 1000 * int(time.mktime(time.strptime(args.time_end, '%d-%m-%Y %H:%M')))
+            epoch_end = 1000 * int(time.mktime(time.strptime(args.time_end, '%d-%m-%Y %H:%M:%S')))
 
         sql_string = "SELECT jid.raw_string, call_log.from_me, call_log.timestamp, call_log.video_call, call_log.duration FROM call_log LEFT JOIN jid ON call_log.jid_row_id = jid._id WHERE " \
                      " call_log.timestamp BETWEEN " + str(epoch_start) + " AND " + str(epoch_end) + ";"
@@ -2100,7 +2171,7 @@ def info(opt):
                     message += Fore.GREEN + "Message: " + Fore.RESET + "Incoming video call\n"
 
             if report_var == 'None':
-                message += Fore.GREEN + "Timestamp: " + Fore.RESET + time.strftime('%d-%m-%Y %H:%M', time.localtime(data[2] / 1000))
+                message += Fore.GREEN + "Timestamp: " + Fore.RESET + time.strftime('%d-%m-%Y %H:%M:%S', time.localtime(data[2] / 1000))
 
             if data[4] > 0:
                 if report_var == 'EN':
@@ -2148,7 +2219,7 @@ def info(opt):
                 print(message)
 
         if report_var != "None":
-            report_html = "./reports/" + settings['prefix'] + "calls.html"
+            report_html = "./reports/" + settings['report_prefix'] + "calls.html"
             print("[+] Creating report ...")
             report(rep_med, report_html)
         print("\n[i] Finished")
@@ -2271,12 +2342,12 @@ if __name__ == "__main__":
             try:
                 epoch_start = "0"
                 """ current date in Epoch milliseconds string """
-                epoch_end = str(1000 * int(time.mktime(time.strptime(time.strftime('%d-%m-%Y %H:%M'), '%d-%m-%Y %H:%M'))))
+                epoch_end = str(1000 * int(time.mktime(time.strptime(time.strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S'))))
 
                 if args.time_start:
-                    epoch_start = 1000 * int(time.mktime(time.strptime(args.time_start, '%d-%m-%Y %H:%M')))
+                    epoch_start = 1000 * int(time.mktime(time.strptime(args.time_start, '%d-%m-%Y %H:%M:%S')))
                 if args.time_end:
-                    epoch_end = 1000 * int(time.mktime(time.strptime(args.time_end, '%d-%m-%Y %H:%M')))
+                    epoch_end = 1000 * int(time.mktime(time.strptime(args.time_end, '%d-%m-%Y %H:%M:%S')))
                 sql_string += str(epoch_start) + "' AND '" + str(epoch_end) + "'"
                 sql_count += str(epoch_start) + "' AND '" + str(epoch_end) + "'"
 
@@ -2339,12 +2410,12 @@ if __name__ == "__main__":
                     sql_string += " AND (messages.key_remote_jid LIKE '%" + str(args.user_all) + "%@s.whatsapp.net' OR messages.remote_resource LIKE '%" + str(args.user_all) + "%')"
                     sql_count += " AND (messages.key_remote_jid LIKE '%" + str(args.user_all) + "%@s.whatsapp.net' OR messages.remote_resource LIKE '%" + str(args.user_all) + "%')"
                     arg_user = args.user_all
-                    report_html = "./reports/" + settings['prefix'] + "user_all_" + args.user_all + ".html"
+                    report_html = "./reports/" + settings['report_prefix'] + "user_all_" + args.user_all + ".html"
 
                 elif args.user:
                     sql_string += " AND messages.key_remote_jid LIKE '%" + str(args.user) + "%@s.whatsapp.net'"
                     sql_count += " AND messages.key_remote_jid LIKE '%" + str(args.user) + "%@s.whatsapp.net'"
-                    report_html = "./reports/" + settings['prefix'] + "user_chat_" + args.user + ".html"
+                    report_html = "./reports/" + settings['report_prefix'] + "user_chat_" + args.user + ".html"
                     arg_user = args.user
 
                 elif args.group:
@@ -2352,10 +2423,10 @@ if __name__ == "__main__":
                     sql_count += " AND messages.key_remote_jid LIKE '%" + str(args.group) + "%'"
                     arg_group = args.group
                     if arg_group.split("@")[1] == "g.us":
-                        report_html = "./reports/" + settings['prefix'] + "group_chat_" + args.group + ".html"
+                        report_html = "./reports/" + settings['report_prefix'] + "group_chat_" + args.group + ".html"
                         report_group, color = participants(args.group)
                     else:
-                        report_html = "./reports/" + settings['prefix'] + "broadcast_chat_" + args.group + ".html"
+                        report_html = "./reports/" + settings['report_prefix'] + "broadcast_chat_" + args.group + ".html"
                         report_group, color = participants(args.group)
 
                 elif args.all:
@@ -2387,8 +2458,8 @@ if __name__ == "__main__":
                             elif report_var == 'DE':
                                 report_med_group = "Gruppe"
                             if report_var == 'EN' or report_var == 'ES' or report_var == 'DE':
-                                report_med += "<tr><th>" + report_med_group + "</th><th style=\"padding:2px; padding-left:8px\"><a href=\"" + settings['prefix'] + "group_chat_" + i + ".html" + "\" target=\"_blank\">" + profile_picture_img_tag + i + gets_name(i) + "</a></th></tr>"
-                                report_html = "./reports/" + settings['prefix'] + "group_chat_" + i + ".html"
+                                report_med += "<tr><th>" + report_med_group + "</th><th style=\"padding:2px; padding-left:8px\"><a href=\"" + settings['report_prefix'] + "group_chat_" + i + ".html" + "\" target=\"_blank\">" + profile_picture_img_tag + i + gets_name(i) + "</a></th></tr>"
+                                report_html = "./reports/" + settings['report_prefix'] + "group_chat_" + i + ".html"
                             sql_string_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
                             sql_count_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
                             arg_group = i
@@ -2397,7 +2468,7 @@ if __name__ == "__main__":
                             result = cursor.fetchone()
                             print("\nNumber of messages: {}".format(str(result[0])))
                             print(Fore.RED + "--------------------------------------------------------------------------------" + Fore.RESET)
-                            print(Fore.CYAN + "GROUP CHAT " + i + Fore.RESET + Fore.YELLOW + gets_name(i) + Fore.RESET)
+                            print(Fore.CYAN + "GROUP CHAT " + i + Fore.RESET + Fore.YELLOW + gets_name(i, "preserve_emoji") + Fore.RESET)
                             report_group, color = participants(arg_group)
 
                         elif i.split('@')[1] == "s.whatsapp.net":
@@ -2414,8 +2485,8 @@ if __name__ == "__main__":
                             elif report_var == 'DE':
                                 report_med_user = "Nutzer"
                             if report_var == 'EN' or report_var == 'ES' or report_var == 'DE':
-                                report_med += "<tr><th>" + report_med_user + "</th><th style=\"padding:2px; padding-left:8px\"><a href=\"" + settings['prefix'] + "user_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\">" + profile_picture_img_tag + i.split('@')[0] + gets_name(i) + "</a></th></tr>"
-                                report_html = "./reports/" + settings['prefix'] + "user_chat_" + i.split('@')[0] + ".html"
+                                report_med += "<tr><th>" + report_med_user + "</th><th style=\"padding:2px; padding-left:8px\"><a href=\"" + settings['report_prefix'] + "user_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\">" + profile_picture_img_tag + i.split('@')[0] + gets_name(i) + "</a></th></tr>"
+                                report_html = "./reports/" + settings['report_prefix'] + "user_chat_" + i.split('@')[0] + ".html"
                             sql_string_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
                             sql_count_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
                             arg_group = ""
@@ -2424,7 +2495,7 @@ if __name__ == "__main__":
                             result = cursor.fetchone()
                             print("\nNumber of messages: {}".format(str(result[0])))
                             print(Fore.RED + "--------------------------------------------------------------------------------" + Fore.RESET)
-                            print(Fore.CYAN + "USER CHAT " + arg_user + Fore.RESET + Fore.YELLOW + gets_name(i) + Fore.RESET)
+                            print(Fore.CYAN + "USER CHAT " + arg_user + Fore.RESET + Fore.YELLOW + gets_name(i, "preserve_emoji") + Fore.RESET)
                             report_group = ""
 
                         elif i.split('@')[1] == "broadcast":
@@ -2436,8 +2507,8 @@ if __name__ == "__main__":
                             elif report_var == 'DE':
                                 report_med_broadcast = "Broadcast"
                             if report_var == 'EN' or report_var == 'ES' or report_var == 'DE':
-                                report_med += "<tr><th>" + report_med_broadcast + "</th><th><a href=\"" + settings['prefix'] + "broadcast_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\">" + i + gets_name(i) + "</a></th></tr>"
-                                report_html = "./reports/" + settings['prefix'] + "broadcast_chat_" + i.split('@')[0] + ".html"
+                                report_med += "<tr><th>" + report_med_broadcast + "</th><th><a href=\"" + settings['report_prefix'] + "broadcast_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\">" + i + gets_name(i) + "</a></th></tr>"
+                                report_html = "./reports/" + settings['report_prefix'] + "broadcast_chat_" + i.split('@')[0] + ".html"
                             sql_string_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
                             sql_count_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
                             arg_group = ""
@@ -2486,12 +2557,12 @@ if __name__ == "__main__":
                 print("Calculating number of images to extract")
                 epoch_start = "0"
                 """ current date in Epoch milliseconds string """
-                epoch_end = str(1000 * int(time.mktime(time.strptime(time.strftime('%d-%m-%Y %H:%M'), '%d-%m-%Y %H:%M'))))
+                epoch_end = str(1000 * int(time.mktime(time.strptime(time.strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S'))))
 
                 if args.time_start:
-                    epoch_start = 1000 * int(time.mktime(time.strptime(args.time_start, '%d-%m-%Y %H:%M')))
+                    epoch_start = 1000 * int(time.mktime(time.strptime(args.time_start, '%d-%m-%Y %H:%M:%S')))
                 if args.time_end:
-                    epoch_end = 1000 * int(time.mktime(time.strptime(args.time_end, '%d-%m-%Y %H:%M')))
+                    epoch_end = 1000 * int(time.mktime(time.strptime(args.time_end, '%d-%m-%Y %H:%M:%S')))
 
                 sql_string = ""
                 if args.user_all:

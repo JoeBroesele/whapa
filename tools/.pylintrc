@@ -128,22 +128,20 @@ disable=print-statement,
         dict-keys-not-iterating,
         dict-values-not-iterating,
         # Additional to default:
-        C0330,                      # bad-continuation
+#        C0330,                      # bad-continuation
 #        C0413,                      # wrong-import-position
-        C0111,                      # missing-docstring
-        C0301,                      # line-too-long
+#        C0111,                      # missing-docstring
+#        C0301,                      # line-too-long
         C0305,                      # trailing-newlines
-        C0326,                      # bad-whitespace
+#        C0326,                      # bad-whitespace
 #        E0401,                      # import-error
-        R0201,                      # no-self-use
-        R0801,                      # duplicate-code
-        W0105,                      # pointless-string-statement
-        W0201,                      # attribute-defined-outside-init
+#        R0201,                      # no-self-use
+#        R0801,                      # duplicate-code
+#        W0105,                      # pointless-string-statement
+#        W0201,                      # attribute-defined-outside-init
 #        W0611,                      # unused-import
-        W0614,                      # unused-wildcard-import
+#        W0614,                      # unused-wildcard-import
         W0703,                      # broad-except
-        W1401,                      # anomalous-backslash-in-string
-
 
 # Enable the message, report, category or checker with the given id(s). You can
 # either give multiple identifier separated by comma (,) or put this option
@@ -180,8 +178,7 @@ score=yes
 [REFACTORING]
 
 # Maximum number of nested blocks for function / method body
-#max-nested-blocks=5
-max-nested-blocks=12
+max-nested-blocks=5
 
 # Complete name of functions that never returns. When checking for
 # inconsistent-return-statements if a never returning function is called then
@@ -249,11 +246,10 @@ indent-string='    '
 
 # Maximum number of characters on a single line.
 #max-line-length=100
-max-line-length=160
+max-line-length=120
 
 # Maximum number of lines in a module
-#max-module-lines=1000
-max-module-lines=5000
+max-module-lines=1000
 
 # List of optional constructs for which whitespace checking is disabled. `dict-
 # separator` is used to allow tabulation in dicts, etc.: {1  : 1,\n222: 2}.
@@ -282,16 +278,14 @@ notes=FIXME,
 [BASIC]
 
 # Naming style matching correct argument names
-#argument-naming-style=snake_case
-argument-naming-style=any
+argument-naming-style=snake_case
 
 # Regular expression matching correct argument names. Overrides argument-
 # naming-style
 #argument-rgx=
 
 # Naming style matching correct attribute names
-#attr-naming-style=snake_case
-attr-naming-style=any
+attr-naming-style=snake_case
 
 # Regular expression matching correct attribute names. Overrides attr-naming-
 # style
@@ -320,7 +314,6 @@ class-naming-style=PascalCase
 
 # Naming style matching correct constant names
 #const-naming-style=UPPER_CASE
-#const-naming-style=snake_case
 const-naming-style=any
 
 # Regular expression matching correct constant names. Overrides const-naming-
@@ -332,8 +325,7 @@ const-naming-style=any
 docstring-min-length=-1
 
 # Naming style matching correct function names
-#function-naming-style=snake_case
-function-naming-style=any
+function-naming-style=snake_case
 
 # Regular expression matching correct function names. Overrides function-
 # naming-style
@@ -346,22 +338,7 @@ good-names=i,
            ex,
            Run,
            _,
-           # Additional to default:
-           a,
-           b,
-           cx,
-           cy,
-           e,
-           f,
-           fh,
-           id,
-           iv,
-           t,
-           t1,
-           t2,
-           tf,
-           x,
-           y
+           e
 
 # Include a hint for the correct naming format with invalid-name
 include-naming-hint=no
@@ -400,8 +377,7 @@ no-docstring-rgx=^_
 property-classes=abc.abstractproperty
 
 # Naming style matching correct variable names
-#variable-naming-style=snake_case
-variable-naming-style=any
+variable-naming-style=snake_case
 
 # Regular expression matching correct variable names. Overrides variable-
 # naming-style
@@ -544,39 +520,31 @@ valid-metaclass-classmethod-first-arg=mcs
 [DESIGN]
 
 # Maximum number of arguments for function / method
-#max-args=5
-max-args=7
+max-args=5
 
 # Maximum number of attributes for a class (see R0902).
-#max-attributes=7
-max-attributes=500
+max-attributes=7
 
 # Maximum number of boolean expressions in a if statement
-#max-bool-expr=5
-max-bool-expr=10
+max-bool-expr=5
 
 # Maximum number of branch for function / method body
-#max-branches=12
-max-branches=400
+max-branches=12
 
 # Maximum number of locals for function / method body
-#max-locals=15
-max-locals=60
+max-locals=15
 
 # Maximum number of parents for a class (see R0901).
 max-parents=7
 
 # Maximum number of public methods for a class (see R0904).
-#max-public-methods=20
-max-public-methods=50
+max-public-methods=20
 
 # Maximum number of return / yield for function / method body
-#max-returns=6
-max-returns=10
+max-returns=6
 
 # Maximum number of statements in function / method body
-#max-statements=50
-max-statements=1000
+max-statements=50
 
 # Minimum number of public methods for a class (see R0903).
 min-public-methods=2

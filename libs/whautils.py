@@ -4,7 +4,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 05 May 2020
-# Rev.: 16 May 2020
+# Rev.: 18 May 2020
 #
 # Utility library for the WhatsApp Parser Toolset.
 #
@@ -19,29 +19,33 @@ from configparser import ConfigParser
 whacipher_version   = "1.1"
 whagodri_version    = "1.2"
 whamerge_version    = "1.0"
-whapa_version       = "1.6"
-whapa_gui_version   = "1.20"
+whapa_version       = "1.7"
+whapa_gui_version   = "1.21"
 settings = {
     # Section 'report'.
     "logo":                     "",
     "logo_height":              "",
+    "company":                  "",
     "record":                   "",
     "unit":                     "",
     "examiner":                 "",
     "notes":                    "",
-    "prefix":                   "",
+    "report_prefix":            "",
     "bg_index":                 "",
     "bg_report":                "",
-    "preview_pics_size":        "",
     "profile_pics_enable":      "",
+    "preview_pics_size":        "",
     "profile_pics_size_report": "",
     "profile_pics_size_index":  "",
     "profile_pics_dir":         "",
     "profile_pic_user":         "",
     "profile_pic_group":        "",
     "contact_vcard_dir":        "",
-    "contact_tooltip":          "",
+    "contact_tooltip_enable":   "",
     "contact_tooltip_pretty":   "",
+    "custom_emoji_enable":      "",
+    "custom_emoji_size":        "",
+    "custom_emoji_dir":         "",
     "html_img_alt_enable":      "",
     "html_img_noimage_pic":     "",
     # Section 'auth'.
@@ -75,19 +79,22 @@ record =
 unit =
 examiner =
 notes =
-prefix = report_
+report_prefix = report_
 bg_index = ./images/background-index.png
 bg_report = ./images/background.png
-preview_pics_size = 100
 profile_pics_enable = no
+preview_pics_size = 100
 profile_pics_size_report = 128
 profile_pics_size_index = 48
 profile_pics_dir = ./Media/Profile Pictures/
 profile_pic_user = ./images/profile-pic-user.jpg
 profile_pic_group = ./images/profile-pic-group.jpg
 contact_vcard_dir = ./Media/Contact vCards/
-contact_tooltip = yes
+contact_tooltip_enable = yes
 contact_tooltip_pretty = yes
+custom_emoji_enable = yes
+custom_emoji_size = 20
+custom_emoji_dir = ./images/emoji
 html_img_alt_enable = no
 html_img_noimage_pic = ./images/noimage.png
 
@@ -129,19 +136,22 @@ def read_settings_file():
         settings['unit']                    = config.get('report', 'unit')
         settings['examiner']                = config.get('report', 'examiner')
         settings['notes']                   = config.get('report', 'notes')
-        settings['prefix']                  = config.get('report', 'prefix')
+        settings['report_prefix']           = config.get('report', 'report_prefix')
         settings['bg_index']                = config.get('report', 'bg_index')
         settings['bg_report']               = config.get('report', 'bg_report')
-        settings['preview_pics_size']       = config.get('report', 'preview_pics_size')
         settings['profile_pics_enable']     = config.get('report', 'profile_pics_enable')
+        settings['preview_pics_size']       = config.get('report', 'preview_pics_size')
         settings['profile_pics_size_report']= config.get('report', 'profile_pics_size_report')
         settings['profile_pics_size_index'] = config.get('report', 'profile_pics_size_index')
         settings['profile_pics_dir']        = config.get('report', 'profile_pics_dir')
         settings['profile_pic_user']        = config.get('report', 'profile_pic_user')
         settings['profile_pic_group']       = config.get('report', 'profile_pic_group')
         settings['contact_vcard_dir']       = config.get('report', 'contact_vcard_dir')
-        settings['contact_tooltip']         = config.get('report', 'contact_tooltip')
+        settings['contact_tooltip_enable']  = config.get('report', 'contact_tooltip_enable')
         settings['contact_tooltip_pretty']  = config.get('report', 'contact_tooltip_pretty')
+        settings['custom_emoji_enable']     = config.get('report', 'custom_emoji_enable')
+        settings['custom_emoji_size']       = config.get('report', 'custom_emoji_size')
+        settings['custom_emoji_dir']        = config.get('report', 'custom_emoji_dir')
         settings['html_img_alt_enable']     = config.get('report', 'html_img_alt_enable')
         settings['html_img_noimage_pic']    = config.get('report', 'html_img_noimage_pic')
         # Section 'auth'.
@@ -160,8 +170,9 @@ def read_settings_file():
         # Evaluate boolean settings.
         bool_true_list = ['1', 'on', 'true', 't', 'yes', 'y']
         settings['profile_pics_enable']     = bool(settings['profile_pics_enable'].lower() in bool_true_list)
-        settings['contact_tooltip']         = bool(settings['contact_tooltip'].lower() in bool_true_list)
+        settings['contact_tooltip_enable']  = bool(settings['contact_tooltip_enable'].lower() in bool_true_list)
         settings['contact_tooltip_pretty']  = bool(settings['contact_tooltip_pretty'].lower() in bool_true_list)
+        settings['custom_emoji_enable']    = bool(settings['custom_emoji_enable'].lower() in bool_true_list)
         settings['html_img_alt_enable']     = bool(settings['html_img_alt_enable'].lower() in bool_true_list)
 
         return settings

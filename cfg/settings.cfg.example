@@ -1,4 +1,4 @@
-# WhatsApp Parser Toolset v1.20 settings file.
+# WhatsApp Parser Toolset v1.21 settings file.
 
 [report]
 logo = ./cfg/logo.png
@@ -8,19 +8,22 @@ record =
 unit =
 examiner =
 notes =
-prefix = report_
+report_prefix = report_
 bg_index = ./images/background-index.png
 bg_report = ./images/background.png
-preview_pics_size = 100
 profile_pics_enable = yes
+preview_pics_size = 100
 profile_pics_size_report = 128
 profile_pics_size_index = 48
 profile_pics_dir = ./Media/Profile Pictures/
 profile_pic_user = ./images/profile-pic-user.jpg
 profile_pic_group = ./images/profile-pic-group.jpg
 contact_vcard_dir = ./Media/Contact vCards/
-contact_tooltip = yes
+contact_tooltip_enable = yes
 contact_tooltip_pretty = yes
+custom_emoji_enable = yes
+custom_emoji_size = 20
+custom_emoji_dir = ./images/emoji
 html_img_alt_enable = no
 html_img_noimage_pic = ./images/noimage.png
 

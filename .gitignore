@@ -2,7 +2,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 28 Apr 2020
-# Rev.: 16 May 2020
+# Rev.: 18 May 2020
 #
 # List of files to be ignored by git.
 #
@@ -25,7 +25,7 @@
 # Whapa settings file.
 /cfg/settings.cfg
 
-# WhatsApp backups, databeses, media, reports and key.
+# WhatsApp backups, databases, media, reports and key.
 Backups/
 Databases/
 Media/
@@ -38,11 +38,15 @@ wa.db
 *.db
 *.crypt12
 
+# Thumbnails extracted from the WhatsApp databases.
+thumbnails/
+
 # WhatsApp profile pictures.
 Profile Pictures/
 
-# Thumbnails extracted from the WhatsApp databeses
-thumbnails/
+# Emoji directories and symbolic link.
+emoji*/
+emoji
 
 # PDF directory.
 PDF/

@@ -4,6 +4,13 @@ All notable changes to this project will be documented in this file.
 
 May 2020
 
+    [+] whapa-gui.py v1.21
+        [-] Version number incremented.
+    [+] whapa.py v1.7
+        [-] Option to use custom emoji implemented.
+        [-] Improved formatting of text: Spaces are now preserved.
+        [-] Some bug fixes.
+
     [+] whapa-gui.py v1.20
         [-] Option for reports in German added.
     [+] whapa.py v1.6
@@ -11,6 +18,7 @@ May 2020
         [-] Fixed the Google real time location for reports in English.
         [-] Some fixes and improvements, mainly related to support different languages.
         [-] Error handling of missing picutres implemented.
+        [-] Timestamps include seconds.
 
     [+] General:
         [-] Central definition of versions in 'whautils.py'.

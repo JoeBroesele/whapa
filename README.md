@@ -31,6 +31,7 @@ Changelog
 ====
 https://github.com/JoeBroesele/whapa/blob/master/doc/CHANGELOG.md
 
+
 Prerequisites
 ====
 Ubuntu 20.04:
@@ -48,6 +49,7 @@ Optional, for automatic conversion of the reports to PDF files:
 
     sudo apt install wkhtmltopdf
 
+
 Installation
 ====
 You can download the latest version of whapa by cloning the GitHub repository:
@@ -56,6 +58,7 @@ You can download the latest version of whapa by cloning the GitHub repository:
 then:
 
     pip3 install -r ./doc/requirements.txt
+
 
 Start
 ====
@@ -71,6 +74,7 @@ If you use Windows system:
   <img src="https://raw.githubusercontent.com/JoeBroesele/whapa/master/doc/software.jpg" width="720" height="576">
 </p>
 
+
 WHAPA
 ====
 whapa.py is an android whatsapp database parser which automates the process and presents the data handled by the Sqlite database in a way that is comprehensible to the analyst.
@@ -78,9 +82,10 @@ If you copy the "wa.db" database into the same directory as the script, the phon
 
 Please note that this project is an early stage. As such, you could find errors. Use it at your own risk!
 
+
 Reports
 =====
-To create reports the first thing we need to do is to configure the file"./cfg/settings.cfg". For example:
+To create reports the first thing you need to do is to configure the file"./cfg/settings.cfg". For example:
 
     [report]
     logo =./cfg/logo.png
@@ -90,22 +95,48 @@ To create reports the first thing we need to do is to configure the file"./cfg/s
     unit = Research group
     examiner = B16f00t
     notes = Chat maintained between the murderer and the victim
-    prefix = report_
+    report_prefix = report_
     bg_index = ./images/background-index.png
     bg_report = ./images/background.png
+    profile_pics_enable = yes
+    preview_pics_size = 100
+    profile_pics_size_report = 128
+    profile_pics_size_index = 48
+    profile_pics_dir = ./Media/Profile Pictures/
+    profile_pic_user = ./images/profile-pic-user.jpg
+    profile_pic_group = ./images/profile-pic-group.jpg
+    contact_vcard_dir = ./Media/Contact vCards/
+    contact_tooltip_enable = yes
+    contact_tooltip_pretty = yes
+    custom_emoji_enable = yes
+    custom_emoji_size = 20
+    custom_emoji_dir = ./images/emoji
+    html_img_alt_enable = no
+    html_img_noimage_pic = ./images/noimage.png
 
-Here we must put our company logo, company or unit name, as well as the assigned registration number, unit or group where we belong, who is the examiner and we can also specify notes on the report.
+Here you must put our company logo, company or unit name, as well as the assigned registration number, unit or group where you belong, who is the examiner and you can also specify notes on the report.
 
 Hints:
-* By leaving ```logo``` blank, the logo and company name will be omitted from the reports.
-* By leaving ```record```, ```unit```, ```examiner``` and ```notes``` blank, the header table will be omitted from the reports.
+* By leaving ```logo``` blank, the logo and company name will be omitted from the reports.  
+* By leaving ```record```, ```unit```, ```examiner``` and ```notes``` blank, the header table will be omitted from the reports.  
+* To use custom emoji, you need to add the emoji images in PNG format to the directory defined by ```custom_emoji_dir```. By default, it is ```./images/emoji```.  
+  Hints:  
+    - Emoji can e.g. be downloaded from these locations:  
+      [Emojipedia - WhatsApp Emoji](https://emojipedia.org/whatsapp/)  
+      [OpenMoji](https://openmoji.org/)  
+    - The names of the emoji files must be like this: ```0023-FE0F-20E3.png```, ```1F44B-1F3FB.png```  
+      I.e. Upper case hexadecimal codes like in [emoji-test.txt](https://unicode.org/Public/emoji/13.0/emoji-test.txt)
+      with 4 or 5 digits. If an emoji uses more than one code, the codes are combined with dashes ```-```.
+      The file extension is ```.png```.
+    - For an overview of official Unicode emoji, please see:  
+      [Full Emoji List, v13.0](https://unicode.org/emoji/charts/full-emoji-list.html)  
 
-To generate the report we must specify the option "English" if we want the report in English, or "Spanish" if we want the report in Spanish.
+To generate the report, you must specify the option "English", "Spanish" or "German" if you want the report in English, Spanish or "German".
 
 If you copy the "wa.db" database into the same directory as the script, the phone number will be displayed along with the name.
 For the report to contains the images, videos, documents... you must copy the "WhatsApp/Media" folder of your phone to the whapa directory, otherwise the program will generate thumbnails.
 
-If we want to print the document or create the report in pdf, it is recommended to set the print option -> scale the view <= 60% or 70%, otherwise the report will be displayed too large.
+If you want to print the document or create the report in PDF, it is recommended to set the print option -> scale the view <= 60% or 70%, otherwise the report will be displayed too large.
 
 In order to automatically convert all reports and the report index into PDF files, simply run the script ```./tools/reports2pdf.sh```.
 
