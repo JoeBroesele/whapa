@@ -130,6 +130,11 @@ Hints:
       The file extension is ```.png```.
     - For an overview of official Unicode emoji, please see:  
       [Full Emoji List, v13.0](https://unicode.org/emoji/charts/full-emoji-list.html)  
+    - For chats held with older versions of WhatsApp prior to early 2015, you will need
+      emoji images with non-standard codes E000 ... EFFF. You can find them
+      [here](https://github.com/andreas-mausch/whatsapp-viewer/tree/master/resources/smileys).
+      To use these emoji images, please remove the leading '0' from the file names and change
+      the file extension to lower case, i.e. ```0E001.PNG``` -> ```E001.png```.
 
 To generate the report, you must specify the option "English", "Spanish" or "German" if you want the report in English, Spanish or "German".
 

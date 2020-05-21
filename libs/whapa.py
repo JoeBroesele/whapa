@@ -163,6 +163,7 @@ def custom_emoji(text):
             continue
         # Is the current sequence an emoji?
         seq_is_emo = False
+        # Check for standard (i.e. Unicode) emoji listed in whaemoji.WHA_EMOJI.
         # The maximum emoji sequence length is 7, i.e. check the current
         # character in combination with up to the next 6 ones.
         for j in range(6, -1, -1):
@@ -175,6 +176,11 @@ def custom_emoji(text):
                     seq_is_emo = True
                     i += j
                     break
+        # In addition to the standard emoji, check for emoji codes used by
+        # older WhatsApp versions. Known such codes are E001 ... E537. For
+        # safety, the codes E000 ... EFFF are included.
+        if text[i] >= u'\U0000E000' and text[i] < u'\U0000F000':
+            seq_is_emo = True
         if seq_is_emo:
             emoji.append(seq)
         i += 1
