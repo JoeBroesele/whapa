@@ -24,8 +24,11 @@ contact_tooltip_pretty = yes
 custom_emoji_enable = yes
 custom_emoji_size = 20
 custom_emoji_dir = ./images/emoji
+html_links_enable = yes
 html_img_alt_enable = no
 html_img_noimage_pic = ./images/noimage.png
+debug_warnings_enable = no
+debug_errors_enable = no
 
 [auth]
 gmail = alias@gmail.com

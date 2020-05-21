@@ -10,6 +10,8 @@ May 2020
         [-] Option to use custom emoji implemented.
         [-] Improved formatting of text: Spaces are now preserved.
         [-] Some bug fixes.
+        [-] Added options to display debug warning and error messages to detect and fix e.g.
+            missing emoji images or WhatsApp media files.
 
     [+] whapa-gui.py v1.20
         [-] Option for reports in German added.

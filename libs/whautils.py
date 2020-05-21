@@ -4,7 +4,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 05 May 2020
-# Rev.: 18 May 2020
+# Rev.: 21 May 2020
 #
 # Utility library for the WhatsApp Parser Toolset.
 #
@@ -46,8 +46,11 @@ settings = {
     "custom_emoji_enable":      "",
     "custom_emoji_size":        "",
     "custom_emoji_dir":         "",
+    "html_links_enable":        "",
     "html_img_alt_enable":      "",
     "html_img_noimage_pic":     "",
+    "debug_warnings_enable":    "",
+    "debug_errors_enable":      "",
     # Section 'auth'.
     "gmail":                    "",
     "passw":                    "",
@@ -95,8 +98,11 @@ contact_tooltip_pretty = yes
 custom_emoji_enable = yes
 custom_emoji_size = 20
 custom_emoji_dir = ./images/emoji
+html_links_enable = yes
 html_img_alt_enable = no
 html_img_noimage_pic = ./images/noimage.png
+debug_warnings_enable = no
+debug_errors_enable = no
 
 [auth]
 gmail = alias@gmail.com
@@ -152,8 +158,11 @@ def read_settings_file():
         settings['custom_emoji_enable']     = config.get('report', 'custom_emoji_enable')
         settings['custom_emoji_size']       = config.get('report', 'custom_emoji_size')
         settings['custom_emoji_dir']        = config.get('report', 'custom_emoji_dir')
+        settings['html_links_enable']       = config.get('report', 'html_links_enable')
         settings['html_img_alt_enable']     = config.get('report', 'html_img_alt_enable')
         settings['html_img_noimage_pic']    = config.get('report', 'html_img_noimage_pic')
+        settings['debug_warnings_enable']   = config.get('report', 'debug_warnings_enable')
+        settings['debug_errors_enable']     = config.get('report', 'debug_errors_enable')
         # Section 'auth'.
         settings['gmail']                   = config.get('auth', 'gmail')
         settings['passw']                   = config.get('auth', 'passw')
@@ -172,8 +181,11 @@ def read_settings_file():
         settings['profile_pics_enable']     = bool(settings['profile_pics_enable'].lower() in bool_true_list)
         settings['contact_tooltip_enable']  = bool(settings['contact_tooltip_enable'].lower() in bool_true_list)
         settings['contact_tooltip_pretty']  = bool(settings['contact_tooltip_pretty'].lower() in bool_true_list)
-        settings['custom_emoji_enable']    = bool(settings['custom_emoji_enable'].lower() in bool_true_list)
+        settings['custom_emoji_enable']     = bool(settings['custom_emoji_enable'].lower() in bool_true_list)
+        settings['html_links_enable']       = bool(settings['html_links_enable'].lower() in bool_true_list)
         settings['html_img_alt_enable']     = bool(settings['html_img_alt_enable'].lower() in bool_true_list)
+        settings['debug_warnings_enable']   = bool(settings['debug_warnings_enable'].lower() in bool_true_list)
+        settings['debug_errors_enable']     = bool(settings['debug_errors_enable'].lower() in bool_true_list)
 
         return settings
     except Exception as e:

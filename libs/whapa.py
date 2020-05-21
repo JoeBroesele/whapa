@@ -34,6 +34,19 @@ color = {}                 # participants color
 current_color = "#5586e5"  # default participant color
 settings = whautils.settings
 
+# Message prefixes.
+prefix_info    = "[i] "
+prefix_warning = "[w] "
+prefix_error   = "[e] "
+prefix_fatal   = "[fatal] "
+
+# Counters.
+count_messages    = 0
+count_group_chats = 0
+count_user_chats  = 0
+count_warnings    = 0
+count_errors      = 0
+
 # Language definitions.
 lang_en_me = "Me"
 lang_en_sys_msg = "System Message"
@@ -69,6 +82,7 @@ def show_help():
 
 def db_connect(db):
     """Function connecting to database"""
+    global count_errors
     if os.path.exists(db):
         try:
             with sqlite3.connect(db) as conn:
@@ -78,9 +92,10 @@ def db_connect(db):
             print("msgstore.db connected\n")
             return cursor, cursor_rep
         except Exception as e:
-            print("Error connecting to database:", e)
+            print(prefix_error + "Error connecting to database:", e)
+            count_errors += 1
     else:
-        print("msgstore.db doesn't exist")
+        print(prefix_fatal + "File 'msgstore.db' doesn't exist!")
         sys.exit(1)
 
 
@@ -137,13 +152,17 @@ def linkify(text):
     # https://stackoverflow.com/questions/1071191/detect-urls-in-a-string-and-wrap-with-a-href-tag
     # Improved regex pattern found here:
     # https://www.w3resource.com/python-exercises/re/python-re-exercise-42.php
-    #URL_REGEX = re.compile(r'''((?:mailto:|ftp://|http[s]?://)[^ <>'"{}|\\^`[\]]*)''')
-    URL_REGEX = re.compile(r'''((?:mailto:|ftp://|http[s]?://)(?:[a-zA-Z]|[0-9]|[$-_@.&+~#]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)''')
-    return URL_REGEX.sub(r'<a href="\1" target="_blank">\1</a>', text)
+    if settings['html_links_enable']:
+        #URL_REGEX = re.compile(r'''((?:mailto:|ftp://|http[s]?://)[^ <>'"{}|\\^`[\]]*)''')
+        URL_REGEX = re.compile(r'''((?:mailto:|ftp://|http[s]?://)(?:[a-zA-Z]|[0-9]|[$-_@.&+~#]|[!*\(\),]|(?:%[0-9a-fA-F][0-9a-fA-F]))+)''')
+        return URL_REGEX.sub(r'<a href="\1" target="_blank">\1</a>', text)
+    else:
+        return text
 
 
 def custom_emoji(text):
     """Replace Unicode emoji in a text with custom emoji images."""
+    global count_warnings
     emoji = []
     # White list emoji with code < u'\U00002000'.
     emoji_filter_whitelist = [
@@ -193,6 +212,11 @@ def custom_emoji(text):
         emoji_name = emoji_name.rstrip("-")
         # Set the name of the emoji image file.
         emoji_image_file = os.path.join("." + settings['custom_emoji_dir'].rstrip('\/'), emoji_name + ".png")
+        # Check if the emoji image file exists.
+        if not os.path.isfile(emoji_image_file[1:]):
+            if settings['debug_warnings_enable']:
+                print(prefix_warning + "The emoji image file '" + emoji_image_file[1:] + "' does not exist!")
+            count_warnings += 1
         # Assemble the HTML emoji image tag.
         emoji_image_tag = "<img src=\"" + emoji_image_file + "\" alt=\"" + emo + "\" height=\"" + settings['custom_emoji_size'] + "\" style=\"vertical-align:middle;\">"
         # Find position of the current emoji.
@@ -205,19 +229,20 @@ def custom_emoji(text):
     return text_emo
 
 
-def html_preview_file(file):
+def html_preview_file(file_name):
     """Create an HTML image tag for a preview picture with a fixed size from an image file."""
-    return html_preview_file_size(file, int(settings['preview_pics_size']), int(settings['preview_pics_size']))
+    return html_preview_file_size(file_name, int(settings['preview_pics_size']), int(settings['preview_pics_size']))
 
 
-def html_preview_file_size(file, tag_width, tag_height):
+def html_preview_file_size(file_name, tag_width, tag_height):
     """Create an HTML image tag for a preview picture with a given size from an image file."""
+    global count_errors
     try:
-        image = Image.open(file)
+        image = Image.open(file_name)
         img_width, img_height = image.size
-        html_image_tag = "<img src=\"." + file
+        html_image_tag = "<img src=\"." + file_name
         if settings['html_img_alt_enable']:
-            html_image_tag += "\" alt=\"" + file
+            html_image_tag += "\" alt=\"" + file_name
         html_image_tag += "\" "
         # If the image is in portrait format, set a fixed width.
         if img_width < img_height:
@@ -228,14 +253,19 @@ def html_preview_file_size(file, tag_width, tag_height):
         html_image_tag += " onError=\"this.onerror=null; this.src='." + settings['html_img_noimage_pic'] + "';\"/>"
         return html_image_tag
     except Exception as e:
+        if settings['debug_errors_enable']:
+            print(prefix_error + "Cannot create HTML image tag for preview picture '" + file_name + "':", e)
+        count_errors += 1
         # In case of an exception, return a default string.
         if settings['html_img_alt_enable']:
-            return "<img src=\"." + file + "\" alt=\"" + file + "\" height=\"{0:d}\" onError=\"this.onerror=null; this.src='.".format(tag_height) + settings['html_img_noimage_pic'] + "';\"/>"
-        return "<img src=\"." + file + "\" height=\"{0:d}\" onError=\"this.onerror=null; this.src='.".format(tag_height) + settings['html_img_noimage_pic'] + "';\"/>"
+            return "<img src=\"." + file_name + "\" alt=\"" + file_name + "\" height=\"{0:d}\" onError=\"this.onerror=null; this.src='.".format(tag_height) + settings['html_img_noimage_pic'] + "';\"/>"
+        return "<img src=\"." + file_name + "\" height=\"{0:d}\" onError=\"this.onerror=null; this.src='.".format(tag_height) + settings['html_img_noimage_pic'] + "';\"/>"
 
 
 def profile_picture(group_id, user_id):
     """Check if a profile picture exists. If not, create a default one from a template. Return a profile picture string."""
+    global count_warnings
+    global count_errors
     # Strip the extension from the user and the group ID.
     group_id = group_id.strip("@g.us")
     user_id = user_id.strip("@s.whatsapp.net")
@@ -251,16 +281,36 @@ def profile_picture(group_id, user_id):
         profile_picture_template = settings['profile_pic_user']
     # Check if the profile picture path exists. If not, create it.
     if not os.path.exists(profile_picture_dir):
-        distutils.dir_util.mkpath(profile_picture_dir)
-    # Check if the profile picture exists. If not, copy the default profile picture template.
-    if (not os.path.exists(profile_picture_file) and
-        os.path.isfile(profile_picture_template) and
-        os.access(profile_picture_template, os.R_OK)):
         try:
-            profile_picture_default = Image.open(profile_picture_template)
-            profile_picture_default.save(profile_picture_file)
+            distutils.dir_util.mkpath(profile_picture_dir)
         except Exception as e:
-            print("Error copying file `{0:s}' to `{1:s}': ".format(profile_picture_template, profile_picture_file) + str(e))
+            if settings['debug_errors_enable']:
+                print(prefix_error + "Error creating the profile picture directory '{0:s}': ".format(profile_picture_dir) + str(e))
+            count_errors += 1
+    if not os.path.exists(profile_picture_file):
+        if settings['debug_warnings_enable']:
+            print(prefix_warning + "The profile picture file '{0:s}' does not exist.".format(profile_picture_file))
+        count_warnings += 1
+    # Check if the profile picture exists. If not, copy the default profile picture template.
+    if not os.path.exists(profile_picture_file):
+        if (os.path.isfile(profile_picture_template) and
+            os.access(profile_picture_template, os.R_OK)):
+            try:
+                profile_picture_default = Image.open(profile_picture_template)
+                profile_picture_default.save(profile_picture_file)
+            except Exception as e:
+                if settings['debug_errors_enable']:
+                    print(prefix_error + "Error copying file '{0:s}' to '{1:s}': ".format(profile_picture_template, profile_picture_file) + str(e))
+                count_errors += 1
+        else:
+            if settings['debug_warnings_enable']:
+                print(prefix_warning + "The profile profile picture template file '{0:s}' is not readable.".format(profile_picture_template))
+            count_warnings += 1
+    # Check if the profile picture finally exists.
+    if not os.path.exists(profile_picture_file):
+        if settings['debug_warnings_enable']:
+            print(prefix_warning + "The profile picture file '{0:s}' does not exist.".format(profile_picture_file))
+        count_warnings += 1
     return profile_picture_file
 
 
@@ -299,6 +349,7 @@ def html_vcard_tooltip(vcard_data):
 
 def vcard_format_pretty(vcard_data):
     """Format vCard data in a pretty way."""
+    global count_errors
     vcard_pretty = ""
     try:
         vcards = list(filter(None, vcard_data.replace("END:VCARD", "").replace("=\n=", "=").split("BEGIN:VCARD")))
@@ -373,7 +424,8 @@ def vcard_format_pretty(vcard_data):
         # Remove last new line.
         vcard_pretty = vcard_pretty.rstrip("\n")
     except Exception as e:
-        print("\nError in function 'vcard_format_pretty': " + str(e))
+        print("\n" + prefix_error + "Error in function 'vcard_format_pretty': " + str(e))
+        count_errors += 1
     return vcard_pretty
 
 
@@ -393,7 +445,9 @@ def vcard_file_create(vcard_file_name, vcard_data):
 
 
 def names(obj):
-    """Function saves a name list if exists wa.db"""
+    """Function saves a name list if wa.db exists."""
+    global count_warnings
+    global count_errors
     if os.path.exists(obj):
         try:
             with sqlite3.connect(obj) as conn:
@@ -406,11 +460,14 @@ def names(obj):
                     for data in sql_names:
                         names_dict.update({data[0]: data[1]})
                 except Exception as e:
-                    print("Error adding items in the dictionary:", e)
+                    print(prefix_error + "Error adding items in the dictionary:", e)
+                    count_errors += 1
         except Exception as e:
-            print("Error connecting to database:", e)
+            print(prefix_error + "Error connecting to database:", e)
+            count_errors += 1
     else:
-        print("wa database doesn't exist")
+        print(prefix_warning + "File 'wa.db' database doesn't exist!")
+        count_warnings += 1
 
 
 def gets_name(obj, *args):
@@ -1148,6 +1205,7 @@ def reply(_id):
 
 def messages(consult, rows, report_html):
     """Function that show database messages"""
+    global count_errors
     try:
         n_mes = 0
         rep_med = ""  # Saves the complete chat
@@ -2087,15 +2145,20 @@ def messages(consult, rows, report_html):
                 n_mes += 1
 
             except Exception as e:
-                print("\nError showing message details: {}, Message ID {}, Timestamp {}".format(e, str(data[23]), time.strftime('%d-%m-%Y %H:%M:%S', time.localtime(data[5] / 1000))))
+                print("\n" + prefix_error + "Error showing message details: {}, Message ID {}, Timestamp {}".format(e, str(data[23]), time.strftime('%d-%m-%Y %H:%M:%S', time.localtime(data[5] / 1000))))
                 n_mes += 1
+                count_errors += 1
                 continue
 
         if report_var != "None":
             report(rep_med, report_html)
 
     except Exception as e:
-        print("\nAn error occurred connecting to the database:", e)
+        print("\n" + prefix_error + "An error occurred connecting to the database:", e)
+        count_errors += 1
+
+    global count_messages
+    count_messages += n_mes
 
 
 def info(opt):
@@ -2115,7 +2178,7 @@ def info(opt):
         sql_consult = cursor.execute(sql_string)
         report_html = "./reports/" + settings['report_prefix'] + "status.html"
         messages(sql_consult, result[0], report_html)
-        print("[i] Finished")
+        print(prefix_info + "Finished")
 
     elif opt == '2':  # Calls
         print(Fore.RED + "Calls" + Fore.RESET)
@@ -2228,7 +2291,7 @@ def info(opt):
             report_html = "./reports/" + settings['report_prefix'] + "calls.html"
             print("[+] Creating report ...")
             report(rep_med, report_html)
-        print("\n[i] Finished")
+        print("\n" + prefix_info + "Finished")
 
     elif opt == '3':  # Chat list
         print(Fore.RED + "Actives chat list" + Fore.RESET)
@@ -2250,11 +2313,13 @@ def get_configs():
         # Read the settings from the settings file.
         settings = whautils.read_settings_file()
     except Exception as e:
-        print("The file `{0:s}' is missing or corrupt! Error: ".format(whautils.settingsFile) + str(e))
+        print(prefix_fatal + "The file '{0:s}' is missing or corrupt! Error:".format(whautils.settingsFile), e)
+        sys.exit(1)
 
 
 def extract(obj, total):
-    """Function that extracts thumbnails"""
+    """Function that extracts thumbnails."""
+    global count_errors
     i = 1
     for data in obj:
         try:
@@ -2288,7 +2353,8 @@ def extract(obj, total):
             sys.stdout.flush()
             i += 1
         except Exception as e:
-            print("\nError extracting: {}, Message ID {}".format(e, str(data[8])))
+            print("\n" + prefix_error + "Error extracting: {}, Message ID {}".format(e, str(data[8])))
+            count_errors += 1
 
     print("\n")
     print("Extraction Complete. Thumbnails save in './thumbnails' path")
@@ -2476,6 +2542,7 @@ if __name__ == "__main__":
                             print(Fore.RED + "--------------------------------------------------------------------------------" + Fore.RESET)
                             print(Fore.CYAN + "GROUP CHAT " + i + Fore.RESET + Fore.YELLOW + gets_name(i, "preserve_emoji") + Fore.RESET)
                             report_group, color = participants(arg_group)
+                            count_group_chats += 1
 
                         elif i.split('@')[1] == "s.whatsapp.net":
                             report_med += report_med_newline
@@ -2503,6 +2570,7 @@ if __name__ == "__main__":
                             print(Fore.RED + "--------------------------------------------------------------------------------" + Fore.RESET)
                             print(Fore.CYAN + "USER CHAT " + arg_user + Fore.RESET + Fore.YELLOW + gets_name(i, "preserve_emoji") + Fore.RESET)
                             report_group = ""
+                            count_user_chats += 1
 
                         elif i.split('@')[1] == "broadcast":
                             report_med += report_med_newline
@@ -2532,7 +2600,13 @@ if __name__ == "__main__":
 
                     if args.report:
                         index_report(report_med, "./reports/index.html")
-                    print("\n[i] Finished")
+                    print("\n" + prefix_info + "Finished")
+                    print(prefix_info + "Messages processed: {0:d}    Group chats: {1:d}    User chats: {2:d}".format(count_messages, count_group_chats, count_user_chats), end='')
+                    if settings['debug_warnings_enable']:
+                        print("    Warnings: {0:d}".format(count_warnings), end='')
+                    if settings['debug_errors_enable']:
+                        print("    Errors: {0:d}".format(count_errors), end='')
+                    print()
                     exit()
 
                 print("Loading data ...")
@@ -2541,10 +2615,11 @@ if __name__ == "__main__":
                 print("Number of messages: {}".format(str(result[0])))
                 sql_consult = cursor.execute(sql_string)
                 messages(sql_consult, result[0], report_html)
-                print("\n[i] Finished")
+                print("\n" + prefix_info + "Finished")
 
             except Exception as e:
-                print("Error: ", e)
+                print(prefix_error, e)
+                count_errors += 1
 
         elif args.info:
             if args.wa_file:
@@ -2588,7 +2663,8 @@ if __name__ == "__main__":
                 sql_consult_extract = cursor.execute(sql_string_extract)
                 extract(sql_consult_extract, result[0])
             except Exception as e:
-                print("Error extracting:", e)
+                print(prefix_error + "Error extracting:", e)
+                count_errors += 1
 
         elif args.database:
             if args.wa_file:

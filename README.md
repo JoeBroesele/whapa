@@ -88,7 +88,7 @@ Reports
 To create reports the first thing you need to do is to configure the file"./cfg/settings.cfg". For example:
 
     [report]
-    logo =./cfg/logo.png
+    logo = ./cfg/logo.png
     logo_height = 128
     company = Foo S.L
     record = 1337
@@ -111,8 +111,11 @@ To create reports the first thing you need to do is to configure the file"./cfg/
     custom_emoji_enable = yes
     custom_emoji_size = 20
     custom_emoji_dir = ./images/emoji
+    html_links_enable = yes
     html_img_alt_enable = no
     html_img_noimage_pic = ./images/noimage.png
+    debug_warnings_enable = no
+    debug_errors_enable = no
 
 Here you must put our company logo, company or unit name, as well as the assigned registration number, unit or group where you belong, who is the examiner and you can also specify notes on the report.
 
