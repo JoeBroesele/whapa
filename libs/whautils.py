@@ -4,7 +4,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 05 May 2020
-# Rev.: 21 May 2020
+# Rev.: 22 May 2020
 #
 # Utility library for the WhatsApp Parser Toolset.
 #
@@ -14,6 +14,13 @@
 import os
 import sys
 from configparser import ConfigParser
+
+
+
+# Change to the WhatsApp Parser Toolset base directory as working directory.
+os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
+
+
 
 # Define global variables.
 whacipher_version   = "1.1"
@@ -65,7 +72,7 @@ settings = {
     "client_ver":               ""
 }
 prefixError = "ERROR: "
-settingsFile = os.path.relpath(os.path.dirname(__file__) + "/../cfg/settings.cfg".replace("/", os.path.sep))
+settingsFile = "./cfg/settings.cfg".replace("/", os.path.sep)
 
 
 
@@ -186,6 +193,17 @@ def read_settings_file():
         settings['html_img_alt_enable']     = bool(settings['html_img_alt_enable'].lower() in bool_true_list)
         settings['debug_warnings_enable']   = bool(settings['debug_warnings_enable'].lower() in bool_true_list)
         settings['debug_errors_enable']     = bool(settings['debug_errors_enable'].lower() in bool_true_list)
+
+        # Set the correct path format for all files and directories: Relative
+        # to the WhatsApp Parser Toolset base directory, beginning with "./".
+        settings['bg_index']                = os.path.join(".", os.path.relpath(settings['bg_index']))
+        settings['bg_report']               = os.path.join(".", os.path.relpath(settings['bg_report']))
+        settings['profile_pics_dir']        = os.path.join(".", os.path.relpath(settings['profile_pics_dir']))
+        settings['profile_pic_user']        = os.path.join(".", os.path.relpath(settings['profile_pic_user']))
+        settings['profile_pic_group']       = os.path.join(".", os.path.relpath(settings['profile_pic_group']))
+        settings['contact_vcard_dir']       = os.path.join(".", os.path.relpath(settings['contact_vcard_dir']))
+        settings['custom_emoji_dir']        = os.path.join(".", os.path.relpath(settings['custom_emoji_dir']))
+        settings['html_img_noimage_pic']    = os.path.join(".", os.path.relpath(settings['html_img_noimage_pic']))
 
         return settings
     except Exception as e:

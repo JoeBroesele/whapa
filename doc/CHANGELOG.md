@@ -12,6 +12,7 @@ May 2020
         [-] Some bug fixes.
         [-] Added options to display debug warning and error messages to detect and fix e.g.
             missing emoji images or WhatsApp media files.
+        [-] Improved handling of directory and file locations in the 'settings.cfg' file.
 
     [+] whapa-gui.py v1.20
         [-] Option for reports in German added.
