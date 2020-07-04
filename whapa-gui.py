@@ -93,7 +93,7 @@ class Whapa:
         self.root.option_add("*Font", "Helvetica 10")
         self.root.option_add('*tearOff', False)
         self.root.geometry('975x810+' + str(int((self.root.winfo_screenwidth()/2) - (975/2))) + '+' + str(int(self.root.winfo_screenheight()/2 - (810/2))))
-        self.root.resizable(0, 0)
+#        self.root.resizable(0, 0)
 
         # Variables
         """ Function that gets report config."""

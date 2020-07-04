@@ -39,13 +39,12 @@ Prerequisites
 Ubuntu 20.04:
 
     sudo apt install git
-    sudo apt install python3-colorama python3-gpsoauth python3-pycryptodome python3-tk
-    sudo apt install
+    sudo apt install python3-colorama python3-distutils python3-gpsoauth python3-pycryptodome python3-tk
 
 Ubuntu 18.04:
 
     sudo apt install git
-    sudo apt install python3-colorama python3-pip python3-pycryptodome python3-tk
+    sudo apt install python3-colorama python3-distutils python3-pip python3-pycryptodome python3-tk
 
 Optional, for automatic conversion of the reports to PDF files:
 
@@ -105,8 +104,10 @@ E.g.:
     report_prefix = report_
     bg_index = ./images/background-index.png
     bg_report = ./images/background.png
-    profile_pics_enable = yes
     preview_pics_size = 100
+    preview_pics_max_width = 500
+    preview_pics_max_height = 500
+    profile_pics_enable = yes
     profile_pics_size_report = 128
     profile_pics_size_index = 48
     profile_pics_dir = ./Media/Profile Pictures/

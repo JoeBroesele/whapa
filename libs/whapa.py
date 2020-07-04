@@ -246,10 +246,20 @@ def html_preview_file_size(file_name, tag_width, tag_height):
         html_image_tag += "\" "
         # If the image is in portrait format, set a fixed width.
         if img_width < img_height:
-            html_image_tag += "width=\"{0:d}\"".format(tag_width)
+            # Limit the maximum height to a reasonable value.
+            tag_height_max = int(settings['preview_pics_max_height'])
+            if (img_height / img_width) * tag_width > tag_height_max:
+                html_image_tag += "height=\"{0:d}\"".format(tag_height_max)
+            else:
+                html_image_tag += "width=\"{0:d}\"".format(tag_width)
         # If the image is in landscape format, set a fixed height.
         else:
-            html_image_tag += "height=\"{0:d}\"".format(tag_height)
+            # Limit the maximum width to avoid overflowing bubbles.
+            tag_width_max = int(settings['preview_pics_max_width'])
+            if (img_width / img_height) * tag_height > tag_width_max:
+                html_image_tag += "width=\"{0:d}\"".format(tag_width_max)
+            else:
+                html_image_tag += "height=\"{0:d}\"".format(tag_height)
         html_image_tag += " onError=\"this.onerror=null; this.src='." + settings['html_img_noimage_pic'] + "';\"/>"
         return html_image_tag
     except Exception as e:

@@ -4,7 +4,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 05 May 2020
-# Rev.: 22 May 2020
+# Rev.: 31 May 2020
 #
 # Utility library for the WhatsApp Parser Toolset.
 #
@@ -40,8 +40,10 @@ settings = {
     "report_prefix":            "",
     "bg_index":                 "",
     "bg_report":                "",
-    "profile_pics_enable":      "",
     "preview_pics_size":        "",
+    "preview_pics_max_width":   "",
+    "preview_pics_max_height":  "",
+    "profile_pics_enable":      "",
     "profile_pics_size_report": "",
     "profile_pics_size_index":  "",
     "profile_pics_dir":         "",
@@ -92,8 +94,10 @@ notes =
 report_prefix = report_
 bg_index = ./images/background-index.png
 bg_report = ./images/background.png
-profile_pics_enable = no
 preview_pics_size = 100
+preview_pics_max_width = 500
+preview_pics_max_height = 500
+profile_pics_enable = no
 profile_pics_size_report = 128
 profile_pics_size_index = 48
 profile_pics_dir = ./Media/Profile Pictures/
@@ -152,8 +156,10 @@ def read_settings_file():
         settings['report_prefix']           = config.get('report', 'report_prefix')
         settings['bg_index']                = config.get('report', 'bg_index')
         settings['bg_report']               = config.get('report', 'bg_report')
-        settings['profile_pics_enable']     = config.get('report', 'profile_pics_enable')
         settings['preview_pics_size']       = config.get('report', 'preview_pics_size')
+        settings['preview_pics_max_width']  = config.get('report', 'preview_pics_max_width')
+        settings['preview_pics_max_height'] = config.get('report', 'preview_pics_max_height')
+        settings['profile_pics_enable']     = config.get('report', 'profile_pics_enable')
         settings['profile_pics_size_report']= config.get('report', 'profile_pics_size_report')
         settings['profile_pics_size_index'] = config.get('report', 'profile_pics_size_index')
         settings['profile_pics_dir']        = config.get('report', 'profile_pics_dir')

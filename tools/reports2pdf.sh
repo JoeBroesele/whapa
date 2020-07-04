@@ -4,7 +4,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 05 May 2020
-# Rev.: 07 May 2020
+# Rev.: 31 May 2020
 #
 # Convert HTML reports into PDF files.
 #
@@ -78,7 +78,7 @@ ulimit -n 1048576
 #       "Warning: Received createRequest signal on a disposed ResourceObject's
 #       NetworkAccessManager. This might be an indication of an iframe taking
 #       too long to load."
-WKHTMLTOPDF_OPTIONS="--javascript-delay 1000"
+WKHTMLTOPDF_OPTIONS="--javascript-delay 2000"
 
 
 
