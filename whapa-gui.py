@@ -535,13 +535,16 @@ class Whapa:
     def check_update(self):
         """Check if a new version is available."""
         update_url = "https://github.com/JoeBroesele/whapa"
-        request = requests.get(update_url)
-        update = (request.text.split('itemprop="about">')[1]).split("</span>")[0].strip("\n ")
-        update_version = update.split(" ")[-1].lower().strip("v")
-        if update and update_version:
-            if update_version > version:
-                if messagebox.askquestion("Update Available", "New version available:\n{0:s}\n\nDo you want to visit the project web page {1:s}?".format(update, update_url)) == 'yes':
-                    webbrowser.open_new_tab(update_url)
+        try:
+            request = requests.get(update_url)
+            update = (request.text.split('<title>')[1]).split("</title>")[0].strip("\n ")
+            update_version = update.split(" ")[-1].lower().strip("v")
+            if update and update_version:
+                if update_version > version:
+                    if messagebox.askquestion("Update Available", "New version available:\n{0:s}\n\nDo you want to visit the project web page {1:s}?".format(update, update_url)) == 'yes':
+                        webbrowser.open_new_tab(update_url)
+        except:
+            pass
 
     def on_entry_click(self, event):
         """function that gets called whenever entry is clicked"""
