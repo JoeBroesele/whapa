@@ -4,7 +4,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 05 May 2020
-# Rev.: 31 May 2020
+# Rev.: 22 Dec 2024
 #
 # Utility library for the WhatsApp Parser Toolset.
 #
@@ -23,11 +23,11 @@ os.chdir(os.path.join(os.path.dirname(os.path.abspath(__file__)), ".."))
 
 
 # Define global variables.
-whacipher_version   = "1.1"
-whagodri_version    = "1.2"
-whamerge_version    = "1.0"
-whapa_version       = "1.7"
-whapa_gui_version   = "1.21"
+whacipher_version   = "1.2"
+whagodri_version    = "1.3"
+whamerge_version    = "1.1"
+whapa_version       = "1.8"
+whapa_gui_version   = "2024.12.22" # based on Whapa 1.59 from Bigfoot
 settings = {
     # Section 'report'.
     "logo":                     "",
@@ -62,9 +62,14 @@ settings = {
     "debug_errors_enable":      "",
     # Section 'auth'.
     "gmail":                    "",
-    "passw":                    "",
+    "gmail_passw":              "",
     "devid":                    "",
     "celnumbr":                 "",
+    "oauth":                    "",
+    "android_id":               "",
+    # Section 'icloud-auth'.
+    "icloud":                   "",
+    "icloud_passw":             "",
     # Section 'app'.
     "pkg":                      "",
     "sig":                      "",
@@ -120,6 +125,12 @@ gmail = alias@gmail.com
 passw = yourpassword
 devid = 1234567887654321
 celnumbr = BackupPhoneNunmber
+oauth = OAuthToken
+android_id = AndroidId
+
+[icloud-auth] 
+icloud  = alias@icloud.com
+passw = yourpassword
 
 [app]
 pkg = com.whatsapp
@@ -178,9 +189,14 @@ def read_settings_file():
         settings['debug_errors_enable']     = config.get('report', 'debug_errors_enable')
         # Section 'auth'.
         settings['gmail']                   = config.get('auth', 'gmail')
-        settings['passw']                   = config.get('auth', 'passw')
+        settings['gmail_passw']             = config.get('auth', 'passw')
         settings['devid']                   = config.get('auth', 'devid')
         settings['celnumbr']                = config.get('auth', 'celnumbr').lstrip('+0')
+        settings['oauth']                   = config.get('auth', 'oauth')
+        settings['android_id']              = config.get('auth', 'android_id')
+        # Section 'icloud-auth'.
+        settings['icloud']                  = config.get('icloud-auth', 'icloud')
+        settings['icloud_passw']            = config.get('icloud-auth', 'passw')
         # Section 'app'.
         settings['pkg']                     = config.get('app', 'pkg')
         settings['sig']                     = config.get('app', 'sig')

@@ -1,4 +1,4 @@
-# WhatsApp Parser Toolset v1.21 settings file.
+# WhatsApp Parser Toolset v2024.12.21 settings file.
 
 [report]
 logo = ./cfg/logo.png
@@ -37,6 +37,12 @@ gmail = alias@gmail.com
 passw = yourpassword
 devid = 1234567887654321
 celnumbr = BackupPhoneNunmber
+oauth = OAuthToken
+android_id = AndroidId
+
+[icloud-auth] 
+icloud  = alias@icloud.com
+passw = yourpassword
 
 [app]
 pkg = com.whatsapp

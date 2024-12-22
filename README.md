@@ -1,240 +1,209 @@
 <p align="center">
-  <img  src="https://github.com/JoeBroesele/whapa/blob/master/doc/whapa.png">
+  <img  src="https://github.com/JoeBroesele/whapa/blob/main/doc/whapa.png">
 </p>
 
 WhatsApp Parser Toolset
 ====
-Updated: May 2020
+Updated: May 2022
 
-WhatsApp Messenger Version 2.19.244
+WhatsApp Messenger Version 2.21.9.14
 
-Whapa is a forensic graphical toolset for analyzing WhatsApp in Android. All the tools have been
-written in Python 3.X and have been tested on linux and windows 10 systems.
+Whapa is a set of graphical forensic tools to analyze whatsapp from Android and soon iOS devices. All the tools have been written in Python 3.8 and have been tested on linux, windows and macOS systems.
 
-Note: Whapa provides 10x more performance and fewer bugs on linux systems than on windows.
+Note: Whapa provides 10x more performance and fewer bugs on linux systems than on windows. 
 
-Whapa is included as standard in distributions such as Tsurugi Linux (Digital Forensics) and
-BlackArch Linux (Penetration Testing).
+Whapa is included as standard in distributions such as Tsurugi Linux (Digital Forensics) and BlackArch Linux (Penetration Testing).
 
-Whapa toolset is divided in four tools:
+Whapa toolset is divided in five tools:
 
-* **Whapa**     (WhatsApp Parser)
-* **Whamerge**  (WhatsApp Merger)
+**Android**
+======
+* **Whapa**     (Whatsapp Parser)(Only working with old database, Working in Progress...)
+* **Whacipher** (Whatsapp Encryption/Decryption) *** Not support Crypt15 ***
 * **Whagodri**  (Whataspp Google Drive Extractor)
-* **Whacipher** (WhatsApp Encryption/Decryption)
+* **Whamerge**  (Whatsapp Merger) (Only working with old database, Working in Progress...)
+* **Whachat**   (Whatsapp Chat Exporter)
+
+**IPhone**
+====
+* **Whacloud**  (Whatsapp ICloud Extractor) (Not working)
+* **Whachat**   (Whatsapp Chat Exporter)
 
 
 **Do you like this project? Support it by donating**
 - ![Paypal](https://raw.githubusercontent.com/reek/anti-adblock-killer/gh-pages/images/paypal.png) Paypal: [Donate](https://paypal.me/b16f00t?locale.x=es_ES)
-- ![btc](https://github.com/nullablebool/crypto-icons/blob/master/16x16/BTC-16.png) Bitcoin: 13h2rupiKBr8bFygKdCunfXrn2pAaVoaTQ
 
 
 Changelog
 ====
-https://github.com/JoeBroesele/whapa/blob/master/doc/CHANGELOG.md
-
-
-Prerequisites
-====
-Ubuntu 20.04:
-
-    sudo apt install git
-    sudo apt install python3-colorama python3-distutils python3-gpsoauth python3-pycryptodome python3-tk
-
-Ubuntu 18.04:
-
-    sudo apt install git
-    sudo apt install python3-colorama python3-distutils python3-pip python3-pycryptodome python3-tk
-
-Optional, for automatic conversion of the reports to PDF files:
-
-    sudo apt install wkhtmltopdf
-
+https://github.com/B16f00t/whapa/blob/master/doc/CHANGELOG.md	
 
 Installation
 ====
 You can download the latest version of whapa by cloning the GitHub repository:
 
-    git clone https://github.com/JoeBroesele/whapa.git
-then:
+	git clone https://github.com/B16f00t/whapa.git && cd whapa
+then (Linux or macOS):
 
-    pip3 install -r ./doc/requirements.txt
+	pip3 install --upgrade -r ./doc/requirements.txt
+	
+or (Windows):
+	
+	pip install --upgrade -r .\doc\requirements.txt
 
 
 Start
 ====
-If you use Linux system:
-* python3 whapa-gui.py
+if you use Linux system:
 
-If you use Windows system:
-* python whapa-gui.py
-    or
-* click on whapa-gui.bat
+	python3 whapa-gui.py
+
+Note that if you get the error `ModuleNotFoundError: No module named 'tkinter'`, you may want to run `sudo apt install python3-tk`
+
+if you use Windows system:
+	
+	python whapa-gui.py
+	or 
+	click on whapa-gui.bat
+
+if you use macOS system (2 install options):
+1) Install (Thanks to XuluWarrior):
+		
+		brew install python-tk
+
+
+2) Install a later version of TK (Thanks to FetchFast):
+		
+		brew install tcl-tk
+    
+* Uninstall python3 and then download and reinstall python 3.9x from python.org
+
+		brew uninstall python3
+		https://www.python.org/downloads/
+	
+* Install requirements
+	
+		pip3 install --upgrade -r ./doc/requirements.txt
+	
+* Run with python3.9x whapa-gui.py
+
+And a window like this will be displayed on the screen:
 
 <p align="center">
-  <img src="https://raw.githubusercontent.com/JoeBroesele/whapa/master/doc/software.jpg" width="720" height="576">
+  <img src="https://raw.githubusercontent.com/B16f00t/whapa/master/doc/software.png" width="720" height="576">
 </p>
-
 
 WHAPA
 ====
-```whapa.py``` is an Android WhatsApp database parser which automates the process and presents the
-data handled by the Sqlite database in a way that is comprehensible to the analyst.
+whapa.py is an Android whatsapp database parser which automates the process and presents the data handled by the SQLite database in a way that is comprehensible to the analyst.
+If you copy the "wa.db" database into the same directory as the script, the phone number will be displayed along with the name.
 
-If you copy the ```wa.db``` database into the same directory as the script, the phone number will be
-displayed along with the name.
-
-Please note that this project is an early stage. As such, you could find errors. Use it at your own
-risk!
-
+Please note that this project is an early stage. As such, you could find errors. Use it at your own risk!
 
 Reports
 =====
-To create reports the first thing you need to do is to configure the file ```./cfg/settings.cfg```.
-E.g.:
+To create reports the first thing we need to do is to configure the file"./cfg/settings.cfg". For example:
 
-    [report]
-    logo = ./cfg/logo.png
-    logo_height = 128
-    company = Foo S.L
-    record = 1337
-    unit = Research group
-    examiner = B16f00t
-    notes = Chat maintained between the murderer and the victim
-    report_prefix = report_
-    bg_index = ./images/background-index.png
-    bg_report = ./images/background.png
-    preview_pics_size = 100
-    preview_pics_max_width = 500
-    preview_pics_max_height = 500
-    profile_pics_enable = yes
-    profile_pics_size_report = 128
-    profile_pics_size_index = 48
-    profile_pics_dir = ./Media/Profile Pictures/
-    profile_pic_user = ./images/profile-pic-user.jpg
-    profile_pic_group = ./images/profile-pic-group.jpg
-    contact_vcard_dir = ./Media/Contact vCards/
-    contact_tooltip_enable = yes
-    contact_tooltip_pretty = yes
-    custom_emoji_enable = yes
-    custom_emoji_size = 20
-    custom_emoji_dir = ./images/emoji
-    html_links_enable = yes
-    html_img_alt_enable = no
-    html_img_noimage_pic = ./images/noimage.png
-    debug_warnings_enable = no
-    debug_errors_enable = no
+	[report]
+	company = Foo S.L
+	record = 1337
+	unit = Research group
+	examiner = B16f00t
+	notes = Chat maintained between the murderer and the victim
+	
+If we want to put the logo of our company, we must replace the file './cfg/logo.png' by the one of our choice.
+In the file './cfg/settings.cfg', the name of the company or unit must be specified, as well as the assigned registration number, the unit or group we belong to, who the examiner is and we can also specify notes in the report.
 
-Here you must put our company logo, company or unit name, as well as the assigned registration
-number, unit or group where you belong, who is the examiner and you can also specify notes on the
-report.
+To generate the report we must specify the option "English" whether we want the report in English, as well as "ES" whether we want the report in Spanish.
 
-Hints:
-* By leaving ```logo``` blank, the logo and company name will be omitted from the reports.  
-* By leaving ```record```, ```unit```, ```examiner``` and ```notes``` blank, the header table will
-  be omitted from the reports.  
-* The directory and file locations in ```./cfg/settings.cfg``` can either be relative to the
-  WhatsApp Parser Toolset base directory or you can specify an absolut path.
-* To use custom emoji, you need to add the emoji images in PNG format to the directory defined by
-  ```custom_emoji_dir```. By default, it is ```./images/emoji```.  
-  Hints:  
-    - Emoji can e.g. be downloaded from these locations:  
-      [Emojipedia - WhatsApp Emoji](https://emojipedia.org/whatsapp/)  
-      [OpenMoji](https://openmoji.org/)  
-    - The names of the emoji files must be like this: ```0023-FE0F-20E3.png```, ```1F44B-1F3FB.png```  
-      I.e. Upper case hexadecimal codes like in
-      [emoji-test.txt](https://unicode.org/Public/emoji/13.0/emoji-test.txt)
-      with 4 or 5 digits. If an emoji uses more than one code, the codes are combined with dashes
-      ```-```. The file extension is ```.png```.
-    - For an overview of official Unicode emoji, please see:  
-      [Full Emoji List, v13.0](https://unicode.org/emoji/charts/full-emoji-list.html)  
-    - For chats held with older versions of WhatsApp prior to early 2015, you will need
-      emoji images with non-standard codes E000 ... EFFF. You can find them
-      [here](https://github.com/andreas-mausch/whatsapp-viewer/tree/master/resources/smileys).
-      To use these emoji images, please remove the leading '0' from the file names and change
-      the file extension to lower case, i.e. ```0E001.PNG``` -> ```E001.png```.  
-      Alternatively, you can extract them from the WhatsApp APK file. The best choice for this
-      purpose is
-      [WhatsApp Messenger 2.12.90](https://www.apkmirror.com/apk/whatsapp-inc/whatsapp/whatsapp-2-12-90-release/whatsapp-2-12-90-android-apk-download/).
-      Also these file you need to rename as described above.
+If you specify the "wa.db" database, the phone number will be displayed along with the name.
+For the report to contains the images, videos, documents... you must copy the "WhatsApp/Media" folder of your phone to the report directory, otherwise the program will generate thumbnails.
 
-To generate the report, you must specify the option "English", "Spanish" or "German" if you want
-the report in English, Spanish or "German".
+If we want to print the document or create the report in pdf, It recommends in the print option -> scale the view <= 60% or 70%, otherwise the report will be displayed too large.
 
-If you copy the ```wa.db``` database into the same directory as the script, the phone number will be
-displayed along with the name.
-For the report to contains the images, videos, documents... you must copy the "WhatsApp/Media"
-folder of your phone to the whapa directory, otherwise the program will generate thumbnails.
 
-If you want to print the document or create the report in PDF, it is recommended to set the print
-option -> scale the view <= 60% or 70%, otherwise the report will be displayed too large.
-
-In order to automatically convert all reports and the report index into PDF files, simply run the
-script ```./tools/reports2pdf.sh```.
+WHACIPHER
+=====
+whacipher.py is a tool which allows decrypt or encrypt WhatsApp database. You must have the key of your phone to decrypt, and additionally a encrypted database as reference to encrypt a new database.
 
 
 WHAMERGE
 ====
-```whamerge``` is a tool to joins backups in a new database, to be able to be analyzed and obtain
-more information, such as deleted groups, messages, etc...
+whamerge is a tool to joins backups in a new database, to be able to be analyzed and obtain more information, such as deleted groups, messages, etc...
 
-Warning: Do not join restored databases with old copies, since they repeat the same ids and the copy
-will not be done correctly.
+Warning: Do not join restored databases with old copies, since they repeat the same ids and the copy will not be done correctly.
 
 
 WHAGODRI
 =====
-```whagodri.py``` is a tool which allows WhatsApp users on Android to extract their backed up
-WhatsApp data from Google Drive.
+whagodri.py is a tool which allows WhatsApp users on Android to extract their backed up WhatsApp data from Google Drive.
 
 Make sure of:
-* Disable 2FA in your Google Account
 * Download the latest version of whapa
 * Install the requirements
 * Settings:
 
 Edit only the values of the./cfg/settings.cfg file
 
-        [auth]
-        gmail = alias@gmail.com
-        passw = yourpassword
-        devid = Device ID (optional, if specified get more information)
-		celnumbr = BackupPhoneNumber -> Country code + phonenumber (ex. 3466666666666)
-* If you request it, log in to your browser and then click here:
-  [https://accounts.google.com/DisplayUnlockCaptcha](https://accounts.google.com/DisplayUnlockCaptcha)
-* If you have problems remove special characters in your password.
+		[google-auth]
+		gmail = alias@gmail.com
+		# Optional. The account password or app password when using 2FA.
+		password  = 
+		# Optional. The result of "adb shell settings get secure android_id".
+		android_id = 0000000000000000
+		# Optional. Enter the backup country code + phonenumber be synchronized, otherwise it synchronizes all backups.
+		# You can specify a list of celnumbr = BackupNumber1, BackupNumber2, ...
+		celnumbr = 
 
-COMMON ISSUES
---------------
-	- Wrong email or password -> Error=BadAuthentication -> Check that your email and password are correct. If so change your google password and try again. Also you might be using an old Python version. Only version > 3.7.7 work.
-	- Wrong phone number -> Requested entity not found -> Check if you put the country code.
-	- Bad backup -> Requested entity was not found-> Overwriting it will not work go to Google drive, delete manually backup and do it again via WhatsApp.
-	- 2FA activated -> Error=NeedsBrowser -> Disable two-factor authentication.
-	- Gsuite account -> Error: DeviceManagementRequiredOrSyncDisabled -> The reason for this is, that for this google-apps account, the enforcement of policies on mobile clients is enabled in admin console (enforce_android_policy). If youdisable this in admin-console, the authentication works.
-	- Bad dependencies-> No moduled name requests -> pip install requests or pip3 install requests
-	- Backup Disabled in that numberphone -> Error: Backup Api not enabled -> The phone number for that google account does not have backup enabled.
-	- Another error -> Update the gpsoauth dependency to its latest version
+* New Method: Login by OAuth, this method is not valid for accounts without a phone number or alternative email associated to the account.
+* If you request it, log in to your browser and then click here. https://accounts.google.com/b/0/DisplayUnlockCaptcha
+* If you want to use 2FA (Two Factor Authentication), you will have to go to the URL: https://myaccount.google.com/apppasswords Then select Application: Other. Write down: Whapa, and a password will be display, then you must write the password in your settings.cfg.
+(Thanks to YuriCosta) or Login by OAuth.
 
-
-WHACIPHER
+WHACLOUD
 =====
-```whacipher.py``` is a tool which allows decrypt or encrypt WhatsApp database. You must have the
-key of your phone to decrypt, and additionally a encrypted database as reference to encrypt a new
-database.
+whacloud.py is a tool which allows WhatsApp users on Iphone to extract their backed up WhatsApp data from ICloud.
+BETA TOOL May contain bugs.
 
+Make sure of:
+* Download the latest version of whapa
+* Install the requirements
+* Settings:
 
+Edit only the values of the./cfg/settings.cfg file
+
+		[icloud-auth]
+		icloud = alias@icloud.com
+		passw = yourpassword
+	
+	
+WHACHAT
+=====
+whachat.py is a tool to make an interactive report from whatsapp's export chat functionality.
+
+To export chats on an Android phone, here are the steps:
+   1. Open the individual or group chat.
+   2. Press the Menu button.
+   3. Press More.
+   4. Select Export chat.
+   5. Choose Include or Exclude files.
+   
+To export chats on an iOS phone, here are the steps:
+   1. Open the individual or group chat.
+   2. Press on the name (Chat information).
+   3. Slide down.
+   4. Select Export chat.
+   5. Choose Include or Exclude files.
+   
+		
 Get in touch
 =====
 Acknowledgements, suggestions, languages, improvements...
 
 Telegram Channel and discuss group
 
-    https://t.me/bigfoot_whapa
-
-
+	https://t.me/bigfoot_whapa
+	
 Disclaimer
 =====
-The developer is not responsible, and expressly disclaims all liability for damages of any kind
-arising from the use, reference or reliance on the software. The information provided by the
-software is not guaranteed to be correct, complete and up-to-date.
-
+The developer is not responsible, and expressly disclaims all liability for damages of any kind arising from the use, reference or reliance on the software. The information provided by the software is not guaranteed to be correct, complete and up-to-date.

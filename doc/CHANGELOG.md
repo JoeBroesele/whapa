@@ -2,6 +2,10 @@ Changelog
 ====
 All notable changes to this project will be documented in this file.
 
+Dec 2024
+
+    Updates from [https://github.com/B16f00t/whapa](https://github.com/B16f00t/whapa) v1.59.
+
 May 2020
 
     [+] whapa-gui.py v1.21

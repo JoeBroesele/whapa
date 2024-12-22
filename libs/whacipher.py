@@ -1,12 +1,12 @@
 #!/usr/bin/env python3
 # -*- coding: utf-8 -*-
 
+#from Crypto.Cipher import AES
+from Cryptodome.Cipher import AES
 import argparse
 import zlib
 import sys
 import os
-#from Crypto.Cipher import AES
-from Cryptodome.Cipher import AES
 
 # Append library folder to Python path.
 sys.path.append(os.path.relpath(os.path.join(os.path.dirname(__file__), 'libs')))
@@ -17,10 +17,11 @@ import whautils
 version = whautils.whacipher_version
 output = ""
 
+
 def banner():
     """ Function Banner """
 
-    print("""
+    print(r"""
      __      __.__                  .__       .__
     /  \    /  \  |__ _____    ____ |__|_____ |  |__   ___________
     \   \/\/   /  |  \\\\__  \ _/ ___\|  \____ \|  |  \_/ __ \_  __ \\
@@ -42,79 +43,77 @@ def show_help():
     """)
 
 
-def encrypt(db_file, key_file, db_cript, output_file):
+def encrypt12(db_file, key_file, db_cript, output_file):
     """ Function encrypt msgstore Database """
     try:
         with open(key_file, "rb") as fh:
             key_data = fh.read()
+
         key = key_data[126:]
         with open(db_cript, "rb") as fh:
             db_cript_data = fh.read()
+
         header = db_cript_data[:51]
         iv = db_cript_data[51:67]
         footer = db_cript_data[-20:]
         with open(db_file, "rb") as fh:
             data = fh.read()
+
         aes = AES.new(key, mode=AES.MODE_GCM, nonce=iv)
         with open(output_file, "wb") as fh:
             fh.write(header + iv + aes.encrypt(zlib.compress(data)) + footer)
 
         print("[-] " + db_file + " encrypted, '" + output_file + "' created")
+
     except Exception as e:
         print("[e] An error has ocurred encrypting '" + db_file + "' - ", e)
 
 
-def decrypt(db_file, key_file, path):
-    """ Function decrypt Crypt12 Database """
+def decrypt14(db_file, key_file, path, offset):
+    """ Function decrypt Crypt14 Database """
     try:
+        print("Trying offset {}".format(offset))
+        if os.path.getsize(key_file) != 158:
+            quit('[e] The specified input key file is invalid.')
+
         with open(key_file, "rb") as fh:
             key_data = fh.read()
+
         key = key_data[126:]
         with open(db_file, "rb") as fh:
             db_data = fh.read()
+
+        data = db_data[offset:]  #191
+        iv = db_data[67:83]
+        aes = AES.new(key, mode=AES.MODE_GCM, nonce=iv)
+        with open(path, "wb") as fh:
+            fh.write(zlib.decompress(aes.decrypt(data)))
+        print("[-] " + db_file + " decrypted, '" + path + "' created")
+        return True
+
+    except Exception as e:
+        print("[e] An error has ocurred decrypting '" + db_file + "' - ", e)
+        return False
+
+
+def decrypt12(db_file, key_file, path):
+    """ Function decrypt Crypt12 Database """
+    try:
+        if os.path.getsize(key_file) != 158:
+            quit('[e] The specified input key file is invalid.')
+
+        with open(key_file, "rb") as fh:
+            key_data = fh.read()
+
+        key = key_data[126:]
+        with open(db_file, "rb") as fh:
+            db_data = fh.read()
+
         data = db_data[67:-20]
         iv = db_data[51:67]
         aes = AES.new(key, mode=AES.MODE_GCM, nonce=iv)
         with open(path, "wb") as fh:
             fh.write(zlib.decompress(aes.decrypt(data)))
-        print("[-] " + db_file + " decrypted, '" + path + "' created")
-
-    except Exception as e:
-        print("[e] An error has ocurred decrypting '" + db_file + "' - ", e)
-
-
-def decrypt_win(db_file, key_file, path):
-    """ Function decrypt Crypt12 Database """
-    try:
-        if os.path.getsize(key_file) != 158:
-            quit('[e] The specified input key file is invalid.')
-        with open(key_file, 'rb') as keyfile:
-            keyfile.seek(30)
-            t1 = keyfile.read(32)
-            keyfile.seek(126)
-            key = keyfile.read(32)
-        tf = db_file + '.tmp'
-        with open(db_file, 'rb') as crypt12:
-            crypt12.seek(3)
-            t2 = crypt12.read(32)
-            if t1 != t2:
-                quit('Key file mismatch or crypt12 file is corrupt.')
-            crypt12.seek(51)
-            iv = crypt12.read(16)
-            crypt12.seek(67)
-            with open(tf, 'wb') as header:
-                header.write(crypt12.read())
-                header.close()
-            with open(tf, 'rb+') as footer:
-                footer.seek(-20, os.SEEK_END)
-                footer.truncate()
-                footer.close()
-        cipher = AES.new(key, AES.MODE_GCM, iv)
-        sqlite = zlib.decompress(cipher.decrypt(open(tf, 'rb').read()))
-        with open(path, 'wb') as msgstore:
-            msgstore.write(sqlite)
-            msgstore.close()
-            os.remove(tf)
         print("[-] " + db_file + " decrypted, '" + path + "' created")
 
     except Exception as e:
@@ -139,8 +138,8 @@ if __name__ == "__main__":
         if args.encrypt:
             if os.path.exists(args.file):
                 if os.path.exists(args.encrypt[0]) and os.path.exists(args.encrypt[1]):
-                    print("[i] Starting to encrypt...")
-                    encrypt(args.file, args.encrypt[0], args.encrypt[1], args.output)
+                    print("[i] Starting to encrypt in Crypt12...")
+                    encrypt12(args.file, args.encrypt[0], args.encrypt[1], args.output)
                 else:
                     print("[e] '" + args.encrypt[0] + "' or '" + args.encrypt[1] + "' doesn't exist")
             else:
@@ -150,10 +149,13 @@ if __name__ == "__main__":
             if os.path.exists(args.file):
                 if os.path.exists(args.decrypt):
                     print("[i] Starting to decrypt...")
-                    if sys.platform == "win32" or sys.platform == "win64" or sys.platform == "cygwin":
-                        decrypt_win(args.file, args.decrypt, args.output)
-                    else:
-                        decrypt(args.file, args.decrypt, args.output)
+                    if ".crypt12" == os.path.splitext(args.file)[1]:
+                        decrypt12(args.file, args.decrypt, args.output)
+
+                    elif ".crypt14" == os.path.splitext(args.file)[1]:
+                        for offset in range(185, 195):
+                            if decrypt14(args.file, args.decrypt, args.output, offset):
+                                break
                 else:
                     print("[e] " + args.decrypt + " doesn't exist")
             else:
@@ -164,14 +166,17 @@ if __name__ == "__main__":
             if os.path.exists(args.path):
                 if os.path.exists(args.decrypt):
                     print("[i] Starting to decrypt...")
-                    root, subdirs, files = next(os.walk(args.path))
+                    dir, subdirs, files = next(os.walk(args.path))
                     for crypt_file in files:
-                        if os.path.splitext(crypt_file)[1] == ".crypt12":
+                        if ".crypt14" == os.path.splitext(crypt_file)[1]:
                             output = args.output + os.path.splitext(crypt_file)[0]
-                            if sys.platform == "win32" or sys.platform == "win64" or sys.platform == "cygwin":
-                                decrypt_win(root + crypt_file, args.decrypt, output)
-                            else:
-                                decrypt(root + crypt_file, args.decrypt, output)
+                            for offset in range(185, 195):
+                                if decrypt14(dir + crypt_file, args.decrypt, output, offset):
+                                    break
+
+                        elif ".crypt12" == os.path.splitext(crypt_file)[1]:
+                            output = args.output + os.path.splitext(crypt_file)[0]
+                            decrypt12(dir + crypt_file, args.decrypt, output)
                     print("[i] Decryption completed")
 
                 else:

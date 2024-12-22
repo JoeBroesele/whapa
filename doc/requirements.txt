@@ -1,5 +1,12 @@
-pycryptodome
-colorama
-configparser
-gpsoauth
 requests
+colorama
+gpsoauth @ git+https://github.com/simon-weber/gpsoauth@b22c57a
+pyicloud
+pandas
+numpy
+selenium
+webdriver-manager
+selenium-stealth
+ConfigObj
+pycryptodome
+packaging
