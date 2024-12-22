@@ -40,6 +40,10 @@ split_path = abs_path.split(os.sep)[:-1]     # ['C:', 'Users', 'Desktop', 'whapa
 whapa_path = os.path.sep.join(split_path)    # C:\Users\Desktop\whapa
 media_rel_path = "../"      # Relative path to "Media" directory.
 settings = whautils.settings
+# Define variables to suppress pylint errors.
+args = ""
+local = ""
+cursor_rep = []
 
 # Message prefixes.
 prefix_info    = "[i] "
@@ -253,7 +257,11 @@ def html_preview_file_size(file_name, tag_width, tag_height):
             file_name = os.path.abspath(os.path.join(local, file_name))
         image = Image.open(file_name)
         img_width, img_height = image.size
-        html_image_tag = "<img src=\"" + media_rel_path + os.path.relpath(file_name, local)
+        # Only add the relative path for the "Media" direcotry where necessary.
+        if os.path.relpath(file_name, local).startswith(media_rel_path):
+            html_image_tag = "<img src=\"" + os.path.relpath(file_name, local)
+        else:
+            html_image_tag = "<img src=\"" + media_rel_path + os.path.relpath(file_name, local)
         if settings['html_img_alt_enable']:
             html_image_tag += "\" alt=\"" + file_name
         html_image_tag += "\" "
@@ -280,9 +288,14 @@ def html_preview_file_size(file_name, tag_width, tag_height):
             print(prefix_error + "Cannot create HTML image tag for preview picture '" + file_name + "':", e)
         count_errors += 1
         # In case of an exception, return a default string.
+        # Only add the relative path for the "Media" direcotry where necessary.
+        if os.path.relpath(file_name, local).startswith(media_rel_path):
+            img_src = os.path.relpath(file_name, local)
+        else:
+            img_src = media_rel_path + os.path.relpath(file_name, local)
         if settings['html_img_alt_enable']:
-            return "<img src=\"" + media_rel_path + os.path.relpath(file_name, local) + "\" alt=\"" + file_name + "\" height=\"{0:d}\" onError=\"this.onerror=null; this.src='.".format(tag_height) + settings['html_img_noimage_pic'] + "';\"/>"
-        return "<img src=\"" + media_rel_path + os.path.relpath(file_name, local) + "\" height=\"{0:d}\" onError=\"this.onerror=null; this.src='.".format(tag_height) + settings['html_img_noimage_pic'] + "';\"/>"
+            return "<img src=\"" + img_src + "\" alt=\"" + file_name + "\" height=\"{0:d}\" onError=\"this.onerror=null; this.src='.".format(tag_height) + settings['html_img_noimage_pic'] + "';\"/>"
+        return "<img src=\"" + img_src + "\" height=\"{0:d}\" onError=\"this.onerror=null; this.src='.".format(tag_height) + settings['html_img_noimage_pic'] + "';\"/>"
 
 
 def profile_picture(group_id, user_id):
@@ -328,7 +341,7 @@ def profile_picture(group_id, user_id):
                 count_errors += 1
         else:
             if settings['debug_warnings_enable']:
-                print(prefix_warning + "The profile profile picture template file '{0:s}' is not readable.".format(profile_picture_template))
+                print(prefix_warning + "The profile picture template file '{0:s}' is not readable.".format(profile_picture_template))
             count_warnings += 1
     # If the source profile picture exists, copy it to the output directory.
     else:
@@ -1503,7 +1516,7 @@ def messages(consult, rows, report_html, local):
 
                                         if report_var == 'EN' or report_var == 'ES' or report_var == 'DE':
                                             report_msg += "<br>./Media/WhatsApp Profile Pictures/" + (data[0].split('@'))[0] + "-" + str(data[2]) + ".jpg"
-                                            report_msg += "<br><a href=\"../Media/WhatsApp Profile Pictures/" + (data[0].split('@'))[0] + "-" + str(data[2]) + ".jpg\" target=\"_self\">" + \
+                                            report_msg += "<br><a href=\"" + media_rel_path + "Media/WhatsApp Profile Pictures/" + (data[0].split('@'))[0] + "-" + str(data[2]) + ".jpg\" target=\"_self\">" + \
                                                 html_preview_file("./Media/WhatsApp Profile Pictures/" +  (data[0].split('@'))[0] + "-" + str(data[2]) + ".jpg") + "</a>"
                                         else:
                                             message += "Thumbnail stored on local path './Media/WhatsApp Profile Pictures/" + (data[0].split('@'))[0] + "-" + ".jpg'\n"
@@ -1748,9 +1761,22 @@ def messages(consult, rows, report_html, local):
                                     report_msg += "Dieser Chat ist mit einem Firmenkonto."
                                 else:
                                     message += Fore.GREEN + "Message: " + Fore.RESET + "This chat is with a company account.\n"
+                            elif data[9] == 29:
+                                if report_var == 'EN':
+                                    report_msg += data[15].strip("@s.whatsapp.net") + gets_name(data[15]) + " changed the settings for the group " + data[0].strip("@s.whatsapp.net") + gets_name(data[0]) + "."
+                                elif report_var == 'ES':
+                                    report_msg += data[15].strip("@s.whatsapp.net") + gets_name(data[15]) + " cambió la configuración del grupo " + data[0].strip("@s.whatsapp.net") + gets_name(data[0]) + "."
+                                elif report_var == 'DE':
+                                    report_msg += data[15].strip("@s.whatsapp.net") + gets_name(data[15]) + " hat die Einstellungen für die Gruppe " + data[0].strip("@s.whatsapp.net") + gets_name(data[0]) + " geändert."
+                                else:
+                                    message += Fore.GREEN + "Message: " + Fore.RESET + data[15].strip("@s.whatsapp.net") + Fore.YELLOW + gets_name(data[15]) + Fore.RESET + " changed the settings for the group " + data[0].strip("@s.whatsapp.net") + Fore.YELLOW + gets_name(data[0]) + Fore.RESET + ".\n"
 
                             else:
-                                print("\nUnknow system message: {}, Message ID {}, Timestamp {}".format(e, str(data[23]), time.strftime('%d-%m-%Y %H:%M', time.localtime(data[5] / 1000))))
+                                if report_var == 'EN' or report_var == 'ES' or report_var == 'DE':
+                                    report_msg += ""
+                                else:
+                                    message += Fore.RED + "Unknow system message: {}, Message ID {}, Timestamp {}".format(data[9], str(data[23]), time.strftime('%d-%m-%Y %H:%M', time.localtime(data[5] / 1000))) + Fore.RESET
+                                print("\nUnknow system message: {}, Message ID {}, Timestamp {}".format(data[9], str(data[23]), time.strftime('%d-%m-%Y %H:%M', time.localtime(data[5] / 1000))))
                                 print("Contact the creator of Whapa to include this new type of identified control messaging.")
 
                         else:
@@ -2659,7 +2685,7 @@ if __name__ == "__main__":
                         report_html = os.path.join(local, settings['report_prefix'] + "group_chat_" + args.group + ".html")
                         report_group, color = participants(args.group)
                     else:
-                        report_html = os.path.join(local, + settings['report_prefix'] + "broadcast_chat_" + args.group + ".html")
+                        report_html = os.path.join(local, settings['report_prefix'] + "broadcast_chat_" + args.group + ".html")
                         report_group, color = participants(args.group)
 
                 elif args.all:
