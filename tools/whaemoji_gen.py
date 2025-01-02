@@ -4,7 +4,7 @@
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
 # Date: 18 May 2020
-# Rev.: 19 May 2020
+# Rev.: 02 Jan 2025
 #
 # Automatically generate the file './libs/whaemoji.py' from the official
 # Unicode list emoji.
@@ -27,7 +27,7 @@ from urllib.request import urlopen
 
 
 # Source of the Unicode emoji list.
-UNICODE_EMOJI_URL = "https://unicode.org/Public/emoji/13.0/emoji-test.txt"
+UNICODE_EMOJI_URL = "https://unicode.org/Public/emoji/16.0/emoji-test.txt"
 
 
 
@@ -39,7 +39,7 @@ for emoji_line in unicode_emoji_file:
     emoji_code_str = emoji_line.split('#')[0].split(';')[0].strip(' \n\r')
     if emoji_code_str:
         emoji_code = emoji_code_str.split(" ")
-        emoji_codes += "    u'"
+        emoji_codes += "    '"
         for code in emoji_code:
             emoji_codes += "\\U{0:08X}".format(int(code, 16))
         emoji_codes += "',\n"
@@ -53,7 +53,7 @@ whaemoji = """\
 # File: whaemoji.py
 # Auth: Joe Broesele
 # Mod.: Joe Broesele
-# Date: 18 May 2020
+# Date: 02 Jan 2025
 # Rev.: """ + time.strftime("%d %b %Y, %H:%M:%S", time.localtime()) + """
 #
 # This file contains a list of valid Unicode emoji used by the WhatsApp Parser.
