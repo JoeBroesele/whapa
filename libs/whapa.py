@@ -15,6 +15,7 @@ import random
 import quopri
 import re
 from PIL import Image
+import tempfile
 
 # Append library folder to Python path.
 sys.path.append(os.path.relpath(os.path.join(os.path.dirname(__file__), 'libs')))
@@ -786,11 +787,6 @@ def report(obj, html, local):
 """
 
     os.makedirs(os.path.dirname(local), exist_ok=True)
-    print("######################")
-    print(local)
-    print("---")
-    print(html)
-    print("######################")
     with open(local + html, 'w', encoding="utf-8", errors="ignore") as f:
         f.write(rep_ini + obj + rep_end)
         f.close()
@@ -1011,8 +1007,8 @@ def reply(_id, local):
 
         elif int(rep[8]) == 3:  # media_wa_type 3 Video
 #            chain = rep[17].split(b'\x77\x02')[0]
-            chain = str.encode(data[17]) if data[17] else str.encode("")
             i = chain.rfind(b"Media/")
+            chain = str.encode(data[17]) if data[17] else str.encode("")
             b = len(chain)
             if i == -1:  # Video doesn't exist
                 thumb = local + "Media/WhatsApp Video/VID-" + str(rep[2]) + "-NotDownloaded.mp4"
@@ -1309,8 +1305,7 @@ def reply(_id, local):
 def messages(consult, rows, report_html, local):
     """Function that show database messages"""
     global count_errors
-#####    try:
-    if True:
+    try:
         n_mes = 0
         rep_med = ""  # Saves the complete chat
 
@@ -1319,14 +1314,7 @@ def messages(consult, rows, report_html, local):
             print(report_group)
 
         for data in consult:
-####            print("################")
-####            print(data)
-####            print(data[10])
-####            print("---")
-####            print(data[11])
-####            print("################")
-#####            try:
-            if True:
+            try:
                 report_msg = ""   # Saves each message
                 report_name = ""  # Saves the chat sender
                 message = ""      # Saves each msg
@@ -1970,27 +1958,28 @@ def messages(consult, rows, report_html, local):
                     elif int(data[8]) == 4:  # media_wa_type 4, Contact
                         vcard_data, vcard_names = vcard_data_extract(data[4])
                         vcard_tooltip = html_vcard_tooltip(vcard_data)
+                        # !!!!! Check: data[10] (original) vs. data[4] !!!!!
                         if settings['contact_vcard_dir']:
                             vcard_file_name = os.path.abspath(os.path.join(local, settings['contact_vcard_dir'], arg_group + arg_user + "-" + data[2] + ".vcf"))
                             vcard_file_create(vcard_file_name, vcard_data)
                             vcard_file_name = media_rel_path + os.path.relpath(vcard_file_name, local)
                             if report_var == 'EN':
-                                report_msg += html.escape(data[10]) + "<br><a href=\"" + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contact vCard</a>"
+                                report_msg += html.escape(data[4]) + "<br><a href=\"" + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contact vCard</a>"
                             elif report_var == 'ES':
-                                report_msg += html.escape(data[10]) + "<br><a href=\"" + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contacto vCard</a>"
+                                report_msg += html.escape(data[4]) + "<br><a href=\"" + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contacto vCard</a>"
                             elif report_var == 'DE':
-                                report_msg += html.escape(data[10]) + "<br><a href=\"" + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Kontakt vCard</a>"
+                                report_msg += html.escape(data[4]) + "<br><a href=\"" + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Kontakt vCard</a>"
                             else:
-                                message += Fore.GREEN + "Name: " + Fore.RESET + data[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
+                                message += Fore.GREEN + "Name: " + Fore.RESET + data[4] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
                         else:
                             if report_var == 'EN':
-                                report_msg += html.escape(data[10]) + "<br>&#9742; Contact vCard"
+                                report_msg += html.escape(data[4]) + "<br>&#9742; Contact vCard"
                             elif report_var == 'ES':
-                                report_msg += html.escape(data[10]) + "<br>&#9742; Contacto vCard"
+                                report_msg += html.escape(data[4]) + "<br>&#9742; Contacto vCard"
                             elif report_var == 'DE':
-                                report_msg += html.escape(data[10]) + "<br>&#9742; Kontakt vCard"
+                                report_msg += html.escape(data[4]) + "<br>&#9742; Kontakt vCard"
                             else:
-                                message += Fore.GREEN + "Name: " + Fore.RESET + data[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
+                                message += Fore.GREEN + "Name: " + Fore.RESET + data[4] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
 
                     elif int(data[8]) == 5:  # media_wa_type 5, Location
                         if data[6]:  # media_url exists
@@ -2187,33 +2176,35 @@ def messages(consult, rows, report_html, local):
                     elif int(data[8]) == 14:  # media_wa_type 14  Vcard multiples
                         vcard_data, vcard_names = vcard_data_extract(data[19])
                         vcard_tooltip = html_vcard_tooltip(vcard_data)
+                        # !!!!! Check: data[10] (original) vs. data[4] !!!!!
                         if settings['contact_vcard_dir']:
                             vcard_file_name = os.path.abspath(os.path.join(local, settings['contact_vcard_dir'], arg_group + arg_user + "-" + data[2] + ".vcf"))
                             vcard_file_create(vcard_file_name, vcard_data)
                             vcard_file_name = media_rel_path + os.path.relpath(vcard_file_name, local)
                             vcard_names_html = ''.join(["<br>" + html.escape(str(vc_name)) for vc_name in vcard_names])
                             if report_var == 'EN':
-                                report_msg += html.escape(data[10]) + "<br><a href=\"" + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contact vCard:" + vcard_names_html + "</a>"
+                                report_msg += html.escape(data[4]) + "<br><a href=\"" + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contact vCard:" + vcard_names_html + "</a>"
                             elif report_var == 'ES':
-                                report_msg += html.escape(data[10]) + "<br><a href=\"" + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contacto vCard:</br></a>" + vcard_names_html
+                                report_msg += html.escape(data[4]) + "<br><a href=\"" + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Contacto vCard:</br></a>" + vcard_names_html
                             elif report_var == 'DE':
-                                report_msg += html.escape(data[10]) + "<br><a href=\"" + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Kontakt vCard:</br></a>" + vcard_names_html
+                                report_msg += html.escape(data[4]) + "<br><a href=\"" + vcard_file_name + "\"" + vcard_tooltip + ">&#9742; Kontakt vCard:</br></a>" + vcard_names_html
                             else:
-                                message += Fore.GREEN + "Name: " + Fore.RESET + data[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
+                                message += Fore.GREEN + "Name: " + Fore.RESET + data[4] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
                         else:
                             if report_var == 'EN':
-                                report_msg += html.escape(data[10]) + "<br>&#9742; Contact vCard:</br>" + vcard_data.replace("\r", "").replace("\n", "<br>")
+                                report_msg += html.escape(data[4]) + "<br>&#9742; Contact vCard:</br>" + vcard_data.replace("\r", "").replace("\n", "<br>")
                             elif report_var == 'ES':
-                                report_msg += html.escape(data[10]) + "<br>&#9742; Contacto vCard:</br>" + vcard_data.replace("\r", "").replace("\n", "<br>")
+                                report_msg += html.escape(data[4]) + "<br>&#9742; Contacto vCard:</br>" + vcard_data.replace("\r", "").replace("\n", "<br>")
                             elif report_var == 'DE':
-                                report_msg += html.escape(data[10]) + "<br>&#9742; Kontakt vCard:</br>" + vcard_data.replace("\r", "").replace("\n", "<br>")
+                                report_msg += html.escape(data[4]) + "<br>&#9742; Kontakt vCard:</br>" + vcard_data.replace("\r", "").replace("\n", "<br>")
                             else:
-                                message += Fore.GREEN + "Name: " + Fore.RESET + data[10] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
+                                message += Fore.GREEN + "Name: " + Fore.RESET + data[4] + Fore.GREEN + " - Type:" + Fore.RESET + " Contact vCard:\n" + vcard_data + "\n"
 
                     elif int(data[8]) == 15:  # media_wa_type 15, Deleted Object
-                        edit_version = data[16] if data[16] else 0
-#                        if int(data[16]) == 5:  # edit_version 5, deleted for me
-                        if int(edit_version) == 5:  # edit_version 5, deleted for me
+                        # !!!!! Check: data[16] !!!!!
+                        if not data[16]:
+                            pass
+                        elif int(data[16]) == 5:  # edit_version 5, deleted for me
                             if report_var == 'EN':
                                 report_msg += "Message deleted for me."
                             elif report_var == 'ES':
@@ -2223,8 +2214,7 @@ def messages(consult, rows, report_html, local):
                             else:
                                 message += Fore.GREEN + "Message: " + Fore.RESET + "Message deleted for me.\n"
 
-#                        elif int(data[16]) == 7:  # edit_version 7, deleted for all
-                        elif int(edit_version) == 7:  # edit_version 7, deleted for all
+                        elif int(data[16]) == 7:  # edit_version 7, deleted for all
                             if report_var == 'EN':
                                 report_msg += "Message deleted for all participants."
                             elif report_var == 'ES':
@@ -2236,10 +2226,6 @@ def messages(consult, rows, report_html, local):
 
                     elif int(data[8]) == 16:  # media_wa_type 16, Share location
                         caption = ""
-#####                        print("############")
-#####                        print(data[11])
-#####                        print(data[12])
-#####                        print("############")
                         if data[11]:
                             caption = " - " + data[11]
 
@@ -2251,8 +2237,7 @@ def messages(consult, rows, report_html, local):
                         elif report_var == 'DE':
                             report_msg += "Live-Standort (" + str(data[13]) + ", " + str(data[14]) + ")" + html.escape(caption) + "\n"
                         else:
-#                            message += Fore.GREEN + "Type: " + Fore.RESET + "Real time location " + Fore.GREEN + "- Caption: " + Fore.RESET + caption + Fore.GREEN + " - Lat: " + Fore.RESET + str(data[13]) + Fore.GREEN + " - Long: " + Fore.RESET + str(data[14]) + Fore.GREEN + " - Duration: " + Fore.RESET + duration_file(data[12]) + "\n"
-                            message += Fore.GREEN + "Type: " + Fore.RESET + "Real time location " + Fore.GREEN + "- Caption: " + Fore.RESET + caption + Fore.GREEN + " - Lat: " + Fore.RESET + str(data[13]) + Fore.GREEN + " - Long: " + Fore.RESET + str(data[14]) + "\n"
+                            message += Fore.GREEN + "Type: " + Fore.RESET + "Real time location " + Fore.GREEN + "- Caption: " + Fore.RESET + caption + Fore.GREEN + " - Lat: " + Fore.RESET + str(data[13]) + Fore.GREEN + " - Long: " + Fore.RESET + str(data[14]) + Fore.GREEN + " - Duration: " + Fore.RESET + duration_file(data[12]) + "\n"
 
                         if report_var == 'EN' or report_var == 'ES' or report_var == 'DE':
                             report_msg += "<br><iframe width=\"300\" height=\"150\" id=\"gmap_canvas\" src=\"https://maps.google.com/maps?q={}%2C{}&t=&z=15&ie=UTF8&iwloc=&output=embed\" frameborder=\"0\" scrolling=\"no\" marginheight=\"0\" marginwidth=\"0\"></iframe>".format(str(data[13]), str(data[14]))
@@ -2323,11 +2308,11 @@ def messages(consult, rows, report_html, local):
                         print(message)
                 n_mes += 1
 
-#####            except Exception as e:
-#####                print("\n" + prefix_error + "Error showing message details: {}, Message ID {}, Timestamp {}".format(e, str(data[23]), time.strftime('%d-%m-%Y %H:%M:%S', time.localtime(data[5] / 1000))))
-#####                n_mes += 1
-#####                count_errors += 1
-#####                continue
+            except Exception as e:
+                print("\n" + prefix_error + "Error showing message details: {}, Message ID {}, Timestamp {}".format(e, str(data[23]), time.strftime('%d-%m-%Y %H:%M:%S', time.localtime(data[5] / 1000))))
+                n_mes += 1
+                count_errors += 1
+                continue
 
         if report_var != "None":
             report(rep_med, report_html, local)
@@ -2339,9 +2324,9 @@ def messages(consult, rows, report_html, local):
             except:
                 pass
 
-#####    except Exception as e:
-#####        print("\n" + prefix_error + "An error occurred connecting to the database:", e)
-#####        count_errors += 1
+    except Exception as e:
+        print("\n" + prefix_error + "An error occurred connecting to the database:", e)
+        count_errors += 1
 
     global count_messages
     count_messages += n_mes
@@ -2352,73 +2337,11 @@ def info(opt, local):
     if opt == '1':  # Status
         print(Fore.RED + "Status" + Fore.RESET)
         rep_med = ""
-#        sql_string = " SELECT messages.key_remote_jid, messages.key_from_me, messages.key_id, messages.status, messages.data, messages.timestamp, messages.media_url, messages.media_mime_type," \
-#                     " messages.media_wa_type, messages.media_size, messages.media_name, messages.media_caption, messages.media_duration, messages.latitude, messages.longitude, " \
-#                     " messages.remote_resource, messages.edit_version, messages.thumb_image, messages.recipient_count, messages.raw_data, messages.starred, messages.quoted_row_id, " \
-#                     " message_thumbnails.thumbnail, messages._id, messages.forwarded  FROM messages LEFT JOIN message_thumbnails ON messages.key_id = message_thumbnails.key_id WHERE messages.key_remote_jid='status@broadcast'"
-        sql_string = " SELECT jid_global.raw_string as key_remote_jid," \
-                     " message.from_me as key_from_me," \
-                     " message.key_id," \
-                     " message.status," \
-                     " message.text_data as data," \
-                     " message.timestamp," \
-                     " message_media.message_url as media_url," \
-                     " message_media.mime_type as media_mime_type," \
-                     " message.message_type as media_wa_type," \
-                     " message_media.file_size as media_size," \
-                     " message.text_data as media_name," \
-                     " message_media.media_caption," \
-                     " message_media.media_duration," \
-                     " message_location.latitude," \
-                     " message_location.longitude," \
-                     " jid_global.raw_string as remote_resource," \
-                     " message_future.version as edit_version," \
-                     " message_media.file_path as thumb_image," \
-                     " message.recipient_count," \
-                     " message_thumbnail.thumbnail as raw_data," \
-                     " message.starred," \
-                     " messages_quotes.quoted_row_id, " \
-                     " message_thumbnail.thumbnail," \
-                     " message._id," \
-                     " messages_quotes.forwarded" + \
-                     """ FROM message
-                        LEFT JOIN message_quoted
-                            ON message_quoted.message_row_id = message._id
-                        LEFT JOIN message_location
-                            ON message_location.message_row_id = message._id
-                        LEFT JOIN message_media
-                            ON message_media.message_row_id = message._id
-                        LEFT JOIN message_thumbnail
-                            ON message_thumbnail.message_row_id = message._id
-                        LEFT JOIN message_future
-                            ON message_future.message_row_id = message._id
-                        LEFT JOIN chat
-                            ON chat._id = message.chat_row_id
-                        INNER JOIN jid jid_global
-                            ON jid_global._id = chat.jid_row_id
-                        LEFT JOIN jid jid_group
-                            ON jid_group._id = message.sender_jid_row_id
-                        LEFT JOIN missed_call_logs
-                            ON message._id = missed_call_logs.message_row_id
-                        LEFT JOIN message_system
-                            ON message_system.message_row_id = message._id
-                        LEFT JOIN message_system_group
-                            ON message_system_group.message_row_id = message._id
-                        LEFT JOIN message_system_number_change
-                            ON message_system_number_change.message_row_id = message._id
-                        LEFT JOIN jid jid_old
-                            ON jid_old._id = message_system_number_change.old_jid_row_id
-                        LEFT JOIN jid jid_new
-                            ON jid_new._id = message_system_number_change.new_jid_row_id
-                        LEFT JOIN receipt_user
-                            ON receipt_user.message_row_id = message._id
-                        LEFT JOIN messages_quotes
-                            ON messages_quotes._id = message._id
-                     """ + \
-                     " WHERE jid.raw_string='status@broadcast'"
-#        sql_count = "SELECT COUNT(*) FROM messages WHERE key_remote_jid='status@broadcast'"
-#        sql_count = "SELECT COUNT(*) FROM jid WHERE raw_string='status@broadcast'"
-        sql_count = "SELECT COUNT(*) FROM message LEFT JOIN chat ON chat._id = message.chat_row_id INNER JOIN jid jid_global ON jid_global._id = chat.jid_row_id WHERE jid_global.raw_string ='status@broadcast'"
+        sql_string = " SELECT messages.key_remote_jid, messages.key_from_me, messages.key_id, messages.status, messages.data, messages.timestamp, messages.media_url, messages.media_mime_type," \
+                     " messages.media_wa_type, messages.media_size, messages.media_name, messages.media_caption, messages.media_duration, messages.latitude, messages.longitude, " \
+                     " messages.remote_resource, messages.edit_version, messages.thumb_image, messages.recipient_count, messages.raw_data, messages.starred, messages.quoted_row_id, " \
+                     " message_thumbnails.thumbnail, messages._id, messages.forwarded  FROM messages LEFT JOIN message_thumbnails ON messages.key_id = message_thumbnails.key_id WHERE messages.key_remote_jid='status@broadcast'"
+        sql_count = "SELECT COUNT(*) FROM messages WHERE key_remote_jid='status@broadcast'"
         print("Loading data ...")
         result = cursor.execute(sql_count)
         result = cursor.fetchone()
@@ -2682,74 +2605,37 @@ if __name__ == "__main__":
         if args.messages:
             if args.wa_file:
                 names(args.wa_file)
-            cursor, cursor_rep = db_connect(args.database)
-#            sql_string = "SELECT messages.key_remote_jid, messages.key_from_me, messages.key_id, messages.status, messages.data, messages.timestamp, messages.media_url, messages.media_mime_type," \
-#                         " messages.media_wa_type, messages.media_size, messages.media_name, messages.media_caption, messages.media_duration, messages.latitude, messages.longitude, " \
-#                         " messages.remote_resource, messages.edit_version, messages.thumb_image, messages.recipient_count, messages.raw_data, messages.starred, messages.quoted_row_id, " \
-#                         " message_thumbnails.thumbnail, messages._id, messages.forwarded  FROM messages LEFT JOIN message_thumbnails ON messages.key_id = message_thumbnails.key_id WHERE messages.timestamp BETWEEN '"
-            sql_string = " SELECT jid_global.raw_string as key_remote_jid," \
-                         " message.from_me as key_from_me," \
-                         " message.key_id," \
-                         " message.status," \
-                         " message.text_data as data," \
-                         " message.timestamp," \
-                         " message_media.message_url as media_url," \
-                         " message_media.mime_type as media_mime_type," \
-                         " message.message_type as media_wa_type," \
-                         " message_media.file_size as media_size," \
-                         " message.text_data as media_name," \
-                         " message_media.media_caption," \
-                         " message_media.media_duration," \
-                         " message_location.latitude," \
-                         " message_location.longitude," \
-                         " jid_global.raw_string as remote_resource," \
-                         " message_future.version as edit_version," \
-                         " message_media.file_path as thumb_image," \
-                         " message.recipient_count," \
-                         " message_thumbnail.thumbnail as raw_data," \
-                         " message.starred," \
-                         " messages_quotes.quoted_row_id, " \
-                         " message_thumbnail.thumbnail," \
-                         " message._id," \
-                         " messages_quotes.forwarded" + \
-                         """ FROM message
-                            LEFT JOIN message_quoted
-                                ON message_quoted.message_row_id = message._id
-                            LEFT JOIN message_location
-                                ON message_location.message_row_id = message._id
-                            LEFT JOIN message_media
-                                ON message_media.message_row_id = message._id
-                            LEFT JOIN message_thumbnail
-                                ON message_thumbnail.message_row_id = message._id
-                            LEFT JOIN message_future
-                                ON message_future.message_row_id = message._id
-                            LEFT JOIN chat
-                                ON chat._id = message.chat_row_id
-                            INNER JOIN jid jid_global
-                                ON jid_global._id = chat.jid_row_id
-                            LEFT JOIN jid jid_group
-                                ON jid_group._id = message.sender_jid_row_id
-		    				LEFT JOIN missed_call_logs
-		    					ON message._id = missed_call_logs.message_row_id
-                            LEFT JOIN message_system
-                                ON message_system.message_row_id = message._id
-                            LEFT JOIN message_system_group
-                                ON message_system_group.message_row_id = message._id
-                            LEFT JOIN message_system_number_change
-                                ON message_system_number_change.message_row_id = message._id
-                            LEFT JOIN jid jid_old
-                                ON jid_old._id = message_system_number_change.old_jid_row_id
-                            LEFT JOIN jid jid_new
-                                ON jid_new._id = message_system_number_change.new_jid_row_id
-                            LEFT JOIN receipt_user
-                                ON receipt_user.message_row_id = message._id
-                            LEFT JOIN messages_quotes
-                                ON messages_quotes._id = message._id
-                         """ + \
-                         " WHERE message.timestamp BETWEEN '"
-            sql_count = "SELECT COUNT(*) FROM message LEFT JOIN message_thumbnails ON message.key_id = message_thumbnails.key_id LEFT JOIN chat ON chat._id = message.chat_row_id INNER JOIN jid jid_global ON jid_global._id = chat.jid_row_id WHERE message.timestamp BETWEEN '"
-#####            try:
-            if True:
+            #########################################################
+            # Create backwards compatible messages table.
+            # First, create a temporary file to not alter the original database!
+            tf = tempfile.NamedTemporaryFile(mode='r+b', prefix=args.database + ".whapa.tmp.", suffix='', delete_on_close=False)
+            tf.close()
+            database_work = tf.name
+            shutil.copy2(args.database, database_work)
+            cursor, cursor_rep = db_connect(database_work)
+            # Delete messages table, if it exists.
+            sql_string = "DROP TABLE IF EXISTS messages"
+            cursor.execute(sql_string)
+            # Create new messages table.
+            # Solution found here: https://github.com/andreas-mausch/whatsapp-viewer/issues/151
+            sql_string = \
+            """CREATE TABLE IF NOT EXISTS messages AS SELECT file_hash,message._id,message.chat_row_id,message.key_id,jid.raw_string AS key_remote_jid,message.from_me AS key_from_me,
+            message.status,message.text_data AS data,message.timestamp,message_media.message_url AS media_url,message.message_type AS media_wa_type,message_media.file_size 
+            AS media_size,message_media.mime_type AS media_mime_type,message_media.media_name,message_media.media_caption,message_media.media_duration,message_location.latitude,
+            message_location.longitude, message_media.file_path AS thumb_image,receipts.remote_resource,message_thumbnail.thumbnail AS raw_data, message._id AS quoted_row_id,
+            message_future.version as edit_version, message.recipient_count, message.starred, messages_quotes.forwarded
+            FROM message LEFT JOIN message_media ON message._id = message_media.message_row_id LEFT JOIN chat ON message.chat_row_id = chat._id LEFT JOIN jid ON jid_row_id = jid._id 
+            LEFT JOIN message_location ON message._id = message_location.message_row_id LEFT JOIN receipts ON message.key_id = receipts.key_id LEFT JOIN message_thumbnail 
+            ON message._id = message_thumbnail.message_row_id
+            LEFT JOIN message_future ON message_future.message_row_id = message._id LEFT JOIN messages_quotes ON messages_quotes._id = message._id"""
+            cursor.execute(sql_string)
+            #########################################################
+            sql_string = "SELECT messages.key_remote_jid, messages.key_from_me, messages.key_id, messages.status, messages.data, messages.timestamp, messages.media_url, messages.media_mime_type," \
+                         " messages.media_wa_type, messages.media_size, messages.media_name, messages.media_caption, messages.media_duration, messages.latitude, messages.longitude, " \
+                         " messages.remote_resource, messages.edit_version, messages.thumb_image, messages.recipient_count, messages.raw_data, messages.starred, messages.quoted_row_id, " \
+                         " message_thumbnails.thumbnail, messages._id, messages.forwarded  FROM messages LEFT JOIN message_thumbnails ON messages.key_id = message_thumbnails.key_id WHERE messages.timestamp BETWEEN '"
+            sql_count = "SELECT COUNT(*) FROM messages LEFT JOIN message_thumbnails ON messages.key_id = message_thumbnails.key_id WHERE messages.timestamp BETWEEN '"
+            try:
                 epoch_start = "0"
                 """ current date in Epoch milliseconds string """
                 epoch_end = str(1000 * int(time.mktime(time.strptime(time.strftime('%d-%m-%Y %H:%M:%S'), '%d-%m-%Y %H:%M:%S'))))
@@ -2766,153 +2652,76 @@ if __name__ == "__main__":
 #                else:
 #                    local = os.getcwd() + "/reports/"
 
-#                if args.text:
-#                    sql_string += " AND messages.data LIKE '%" + str(args.text) + "%'"
-#                    sql_count += " AND messages.data LIKE '%" + str(args.text) + "%'"
-#                if args.web:
-#                    sql_string += " AND messages.key_id LIKE '3EB0%'"
-#                    sql_count += " AND messages.key_id LIKE '3EB0%'"
-#                if args.starred:
-#                    sql_string += " AND messages.starred = 1"
-#                    sql_count += " AND messages.starred = 1"
-#                if args.broadcast:
-#                    sql_string += " AND messages.remote_resource LIKE '%broadcast%'"
-#                    sql_count += " AND messages.remote_resource LIKE '%broadcast%'"
-#                if args.report:
-#                    report_var = args.report
-#                    get_configs()
-#                if args.type_text:
-#                    sql_string += " AND messages.media_wa_type = 0"
-#                    sql_count += " AND messages.media_wa_type = 0"
-#                if args.type_image:
-#                    sql_string += " AND messages.media_wa_type = 1"
-#                    sql_count += " AND messages.media_wa_type = 1"
-#                if args.type_audio:
-#                    sql_string += " AND messages.media_wa_type = 2"
-#                    sql_count += " AND messages.media_wa_type = 2"
-#                if args.type_video:
-#                    sql_string += " AND messages.media_wa_type = 3"
-#                    sql_count += " AND messages.media_wa_type = 3"
-#                if args.type_contact:
-#                    sql_string += " AND messages.media_wa_type = 4 OR messages.media_wa_type = 14"
-#                    sql_count += " AND messages.media_wa_type = 4 OR messages.media_wa_type = 14"
-#                if args.type_location:
-#                    sql_string += " AND messages.media_wa_type = 5"
-#                    sql_count += " AND messages.media_wa_type = 5"
-#                if args.type_call:
-#                    sql_string += " AND messages.media_wa_type = 8 OR messages.media_wa_type = 10"
-#                    sql_count += " AND messages.media_wa_type = 8 OR messages.media_wa_type = 10"
-#                if args.type_application:
-#                    sql_string += " AND messages.media_wa_type = 9"
-#                    sql_count += " AND messages.media_wa_type = 9"
-#                if args.type_gif:
-#                    sql_string += " AND messages.media_wa_type = 13"
-#                    sql_count += " AND messages.media_wa_type = 13"
-#                if args.type_deleted:
-#                    sql_string += " AND messages.media_wa_type = 15"
-#                    sql_count += " AND messages.media_wa_type = 15"
-#                if args.type_share:
-#                    sql_string += " AND messages.media_wa_type = 16"
-#                    sql_count += " AND messages.media_wa_type = 16"
-#                if args.type_stickers:
-#                    sql_string += " AND messages.media_wa_type = 20"
-#                    sql_count += " AND messages.media_wa_type = 20"
-#                if args.type_system:
-#                    sql_string += " AND messages.media_wa_type = 0 AND messages.status = 6"
-#                    sql_count += " AND messages.media_wa_type = 0 AND messages.status = 6"
-#
-#                if args.user_all:
-#                    sql_string += " AND (messages.key_remote_jid LIKE '%" + str(args.user_all) + "%@s.whatsapp.net' OR messages.remote_resource LIKE '%" + str(args.user_all) + "%')"
-#                    sql_count += " AND (messages.key_remote_jid LIKE '%" + str(args.user_all) + "%@s.whatsapp.net' OR messages.remote_resource LIKE '%" + str(args.user_all) + "%')"
-#                    arg_user = args.user_all
-#                    report_html = os.path.join(local, settings['report_prefix'] + "user_all_" + args.user_all + ".html")
-#
-#                elif args.user:
-#                    sql_string += " AND messages.key_remote_jid LIKE '%" + str(args.user) + "%@s.whatsapp.net'"
-#                    sql_count += " AND messages.key_remote_jid LIKE '%" + str(args.user) + "%@s.whatsapp.net'"
-#                    report_html = os.path.join(local, settings['report_prefix'] + "user_chat_" + args.user + ".html")
-#                    arg_user = args.user
-#
-#                elif args.group:
-#                    sql_string += " AND messages.key_remote_jid LIKE '%" + str(args.group) + "%'"
-#                    sql_count += " AND messages.key_remote_jid LIKE '%" + str(args.group) + "%'"
-#                    arg_group = args.group
-#                    if arg_group.split("@")[1] == "g.us":
-#                        report_html = os.path.join(local, settings['report_prefix'] + "group_chat_" + args.group + ".html")
-#                        report_group, color = participants(args.group)
-#                    else:
-#                        report_html = os.path.join(local, settings['report_prefix'] + "broadcast_chat_" + args.group + ".html")
-#                        report_group, color = participants(args.group)
                 if args.text:
-                    sql_string += " AND message.text_data LIKE '%" + str(args.text) + "%'"
-                    sql_count += " AND message.text_data LIKE '%" + str(args.text) + "%'"
+                    sql_string += " AND messages.data LIKE '%" + str(args.text) + "%'"
+                    sql_count += " AND messages.data LIKE '%" + str(args.text) + "%'"
                 if args.web:
-                    sql_string += " AND message.key_id LIKE '3EB0%'"
-                    sql_count += " AND message.key_id LIKE '3EB0%'"
+                    sql_string += " AND messages.key_id LIKE '3EB0%'"
+                    sql_count += " AND messages.key_id LIKE '3EB0%'"
                 if args.starred:
-                    sql_string += " AND message.starred = 1"
-                    sql_count += " AND message.starred = 1"
+                    sql_string += " AND messages.starred = 1"
+                    sql_count += " AND messages.starred = 1"
                 if args.broadcast:
-                    sql_string += " AND key_remote_jid LIKE '%broadcast%'"
-                    sql_count += " AND key_remote_jid LIKE '%broadcast%'"
+                    sql_string += " AND messages.remote_resource LIKE '%broadcast%'"
+                    sql_count += " AND messages.remote_resource LIKE '%broadcast%'"
                 if args.report:
                     report_var = args.report
                     get_configs()
                 if args.type_text:
-                    sql_string += " AND media_wa_type = 0"
-                    sql_count += " AND media_wa_type = 0"
+                    sql_string += " AND messages.media_wa_type = 0"
+                    sql_count += " AND messages.media_wa_type = 0"
                 if args.type_image:
-                    sql_string += " AND media_wa_type = 1"
-                    sql_count += " AND media_wa_type = 1"
+                    sql_string += " AND messages.media_wa_type = 1"
+                    sql_count += " AND messages.media_wa_type = 1"
                 if args.type_audio:
-                    sql_string += " AND media_wa_type = 2"
-                    sql_count += " AND media_wa_type = 2"
+                    sql_string += " AND messages.media_wa_type = 2"
+                    sql_count += " AND messages.media_wa_type = 2"
                 if args.type_video:
-                    sql_string += " AND media_wa_type = 3"
-                    sql_count += " AND media_wa_type = 3"
+                    sql_string += " AND messages.media_wa_type = 3"
+                    sql_count += " AND messages.media_wa_type = 3"
                 if args.type_contact:
-                    sql_string += " AND media_wa_type = 4 OR media_wa_type = 14"
-                    sql_count += " AND media_wa_type = 4 OR media_wa_type = 14"
+                    sql_string += " AND messages.media_wa_type = 4 OR messages.media_wa_type = 14"
+                    sql_count += " AND messages.media_wa_type = 4 OR messages.media_wa_type = 14"
                 if args.type_location:
-                    sql_string += " AND media_wa_type = 5"
-                    sql_count += " AND media_wa_type = 5"
+                    sql_string += " AND messages.media_wa_type = 5"
+                    sql_count += " AND messages.media_wa_type = 5"
                 if args.type_call:
-                    sql_string += " AND media_wa_type = 8 OR media_wa_type = 10"
-                    sql_count += " AND media_wa_type = 8 OR media_wa_type = 10"
+                    sql_string += " AND messages.media_wa_type = 8 OR messages.media_wa_type = 10"
+                    sql_count += " AND messages.media_wa_type = 8 OR messages.media_wa_type = 10"
                 if args.type_application:
-                    sql_string += " AND media_wa_type = 9"
-                    sql_count += " AND media_wa_type = 9"
+                    sql_string += " AND messages.media_wa_type = 9"
+                    sql_count += " AND messages.media_wa_type = 9"
                 if args.type_gif:
-                    sql_string += " AND media_wa_type = 13"
-                    sql_count += " AND media_wa_type = 13"
+                    sql_string += " AND messages.media_wa_type = 13"
+                    sql_count += " AND messages.media_wa_type = 13"
                 if args.type_deleted:
-                    sql_string += " AND media_wa_type = 15"
-                    sql_count += " AND media_wa_type = 15"
+                    sql_string += " AND messages.media_wa_type = 15"
+                    sql_count += " AND messages.media_wa_type = 15"
                 if args.type_share:
-                    sql_string += " AND media_wa_type = 16"
-                    sql_count += " AND media_wa_type = 16"
+                    sql_string += " AND messages.media_wa_type = 16"
+                    sql_count += " AND messages.media_wa_type = 16"
                 if args.type_stickers:
-                    sql_string += " AND media_wa_type = 20"
-                    sql_count += " AND media_wa_type = 20"
+                    sql_string += " AND messages.media_wa_type = 20"
+                    sql_count += " AND messages.media_wa_type = 20"
                 if args.type_system:
-                    sql_string += " AND media_wa_type = 0 AND message.status = 6"
-                    sql_count += " AND media_wa_type = 0 AND message.status = 6"
+                    sql_string += " AND messages.media_wa_type = 0 AND messages.status = 6"
+                    sql_count += " AND messages.media_wa_type = 0 AND messages.status = 6"
 
                 if args.user_all:
-                    sql_string += " AND (key_remote_jid LIKE '%" + str(args.user_all) + "%@s.whatsapp.net' OR remote_resource LIKE '%" + str(args.user_all) + "%')"
-                    sql_count += " AND (key_remote_jid LIKE '%" + str(args.user_all) + "%@s.whatsapp.net' OR remote_resource LIKE '%" + str(args.user_all) + "%')"
+                    sql_string += " AND (messages.key_remote_jid LIKE '%" + str(args.user_all) + "%@s.whatsapp.net' OR messages.remote_resource LIKE '%" + str(args.user_all) + "%')"
+                    sql_count += " AND (messages.key_remote_jid LIKE '%" + str(args.user_all) + "%@s.whatsapp.net' OR messages.remote_resource LIKE '%" + str(args.user_all) + "%')"
                     arg_user = args.user_all
                     report_html = os.path.join(local, settings['report_prefix'] + "user_all_" + args.user_all + ".html")
 
                 elif args.user:
-                    sql_string += " AND key_remote_jid LIKE '%" + str(args.user) + "%@s.whatsapp.net'"
-                    sql_count += " AND key_remote_jid LIKE '%" + str(args.user) + "%@s.whatsapp.net'"
+                    sql_string += " AND messages.key_remote_jid LIKE '%" + str(args.user) + "%@s.whatsapp.net'"
+                    sql_count += " AND messages.key_remote_jid LIKE '%" + str(args.user) + "%@s.whatsapp.net'"
                     report_html = os.path.join(local, settings['report_prefix'] + "user_chat_" + args.user + ".html")
                     arg_user = args.user
 
                 elif args.group:
-                    sql_string += " AND key_remote_jid LIKE '%" + str(args.group) + "%'"
-                    sql_count += " AND key_remote_jid LIKE '%" + str(args.group) + "%'"
+                    sql_string += " AND messages.key_remote_jid LIKE '%" + str(args.group) + "%'"
+                    sql_count += " AND messages.key_remote_jid LIKE '%" + str(args.group) + "%'"
                     arg_group = args.group
                     if arg_group.split("@")[1] == "g.us":
                         report_html = os.path.join(local, settings['report_prefix'] + "group_chat_" + args.group + ".html")
@@ -2924,7 +2733,7 @@ if __name__ == "__main__":
                 elif args.all:
                     get_configs()
 #                    sql_string_consult = "SELECT raw_string_jid FROM chat_view ORDER BY sort_timestamp DESC"
-                    sql_string_consult = "SELECT jid_global.raw_string as key_remote_jid FROM chat_view INNER JOIN jid jid_global ON jid_global._id = chat_view.jid_row_id ORDER BY sort_timestamp DESC"
+                    sql_string_consult = "SELECT jid.raw_string FROM jid ORDER BY _id ASC"
                     sql_consult_chat = cursor.execute(sql_string_consult)
                     chats_live = []
                     for i in sql_consult_chat:
@@ -2936,9 +2745,6 @@ if __name__ == "__main__":
                         sql_string_copy = sql_string
                         sql_count_copy = sql_count
                         profile_picture_img_tag = ""
-
-                        if len(i.split('@')) < 2:
-                            continue
 
                         if i.split('@')[1] == "g.us":
                             report_med += report_med_newline
@@ -2956,10 +2762,8 @@ if __name__ == "__main__":
                             if report_var == 'EN' or report_var == 'ES' or report_var == 'DE':
                                 report_med += "<tr><th>" + report_med_group + "</th><th style=\"padding:2px; padding-left:8px\"><a href=\"" + settings['report_prefix'] + "group_chat_" + i + ".html" + "\" target=\"_blank\">" + profile_picture_img_tag + i + gets_name(i) + "</a></th></tr>"
                                 report_html = settings['report_prefix'] + "group_chat_" + i + ".html"
-#                            sql_string_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
-#                            sql_count_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
-                            sql_string_copy += " AND key_remote_jid LIKE '%" + i + "%'"
-                            sql_count_copy += " AND key_remote_jid LIKE '%" + i + "%'"
+                            sql_string_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
+                            sql_count_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
                             arg_group = i
                             arg_user = ""
                             result = cursor.execute(sql_count_copy)
@@ -2986,10 +2790,8 @@ if __name__ == "__main__":
                             if report_var == 'EN' or report_var == 'ES' or report_var == 'DE':
                                 report_med += "<tr><th>" + report_med_user + "</th><th style=\"padding:2px; padding-left:8px\"><a href=\"" + settings['report_prefix'] + "user_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\">" + profile_picture_img_tag + i.split('@')[0] + gets_name(i) + "</a></th></tr>"
                                 report_html = settings['report_prefix'] + "user_chat_" + i.split('@')[0] + ".html"
-#                            sql_string_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
-#                            sql_count_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
-                            sql_string_copy += " AND key_remote_jid LIKE '%" + i + "%'"
-                            sql_count_copy += " AND key_remote_jid LIKE '%" + i + "%'"
+                            sql_string_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
+                            sql_count_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
                             arg_group = ""
                             arg_user = i.split('@')[0]
                             result = cursor.execute(sql_count_copy)
@@ -3011,10 +2813,8 @@ if __name__ == "__main__":
                             if report_var == 'EN' or report_var == 'ES' or report_var == 'DE':
                                 report_med += "<tr><th>" + report_med_broadcast + "</th><th><a href=\"" + settings['report_prefix'] + "broadcast_chat_" + i.split('@')[0] + ".html" + "\" target=\"_blank\">" + i + gets_name(i) + "</a></th></tr>"
                                 report_html = settings['report_prefix'] + "broadcast_chat_" + i.split('@')[0] + ".html"
-#                            sql_string_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
-#                            sql_count_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
-                            sql_string_copy += " AND key_remote_jid LIKE '%" + i + "%'"
-                            sql_count_copy += " AND key_remote_jid LIKE '%" + i + "%'"
+                            sql_string_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
+                            sql_count_copy += " AND messages.key_remote_jid LIKE '%" + i + "%'"
                             arg_group = ""
                             arg_user = i
                             result = cursor.execute(sql_count_copy)
@@ -3024,9 +2824,6 @@ if __name__ == "__main__":
                             print(Fore.CYAN + "BROADCAST CHAT " + i + Fore.RESET + Fore.YELLOW + gets_name(i) + Fore.RESET)
                             report_group, color = participants(arg_user)
 
-######                        print("#########################")
-######                        print(sql_string_copy)
-######                        print("#########################")
                         sql_consult = cursor.execute(sql_string_copy)
                         messages(sql_consult, result[0], report_html, local)
                         print()
@@ -3047,15 +2844,12 @@ if __name__ == "__main__":
                 result = cursor.fetchone()
                 print("Number of messages: {}".format(str(result[0])))
                 sql_consult = cursor.execute(sql_string)
-#####                print("#######################")
-#####                print(sql_consult[15])
-#####                print("#######################")
                 messages(sql_consult, result[0], report_html, local)
                 print("\n" + prefix_info + "Finished")
 
-#####            except Exception as e:
-#####                print(prefix_error, e)
-#####                count_errors += 1
+            except Exception as e:
+                print(prefix_error, e)
+                count_errors += 1
 
         elif args.info:
 
@@ -3117,4 +2911,12 @@ if __name__ == "__main__":
             if args.wa_file:
                 names(args.wa_file)
                 db_connect(args.database)
+
+    # Remove temporary database files:
+    if os.path.isfile(database_work):
+        os.remove(database_work)
+    if os.path.isfile(database_work + "-shm"):
+        os.remove(database_work + "-shm")
+    if os.path.isfile(database_work + "-val"):
+        os.remove(database_work + "-val")
 
