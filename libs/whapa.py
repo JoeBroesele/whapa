@@ -2398,8 +2398,8 @@ def info(opt, local):
                             ON jid_global._id = chat.jid_row_id
                         LEFT JOIN jid jid_group
                             ON jid_group._id = message.sender_jid_row_id
-		    		    LEFT JOIN missed_call_logs
-		    		    	ON message._id = missed_call_logs.message_row_id
+                        LEFT JOIN missed_call_logs
+                            ON message._id = missed_call_logs.message_row_id
                         LEFT JOIN message_system
                             ON message_system.message_row_id = message._id
                         LEFT JOIN message_system_group
@@ -2417,7 +2417,8 @@ def info(opt, local):
                      """ + \
                      " WHERE jid.raw_string='status@broadcast'"
 #        sql_count = "SELECT COUNT(*) FROM messages WHERE key_remote_jid='status@broadcast'"
-        sql_count = "SELECT COUNT(*) FROM jid WHERE raw_string='status@broadcast'"
+#        sql_count = "SELECT COUNT(*) FROM jid WHERE raw_string='status@broadcast'"
+        sql_count = "SELECT COUNT(*) FROM message LEFT JOIN chat ON chat._id = message.chat_row_id INNER JOIN jid jid_global ON jid_global._id = chat.jid_row_id WHERE jid_global.raw_string ='status@broadcast'"
         print("Loading data ...")
         result = cursor.execute(sql_count)
         result = cursor.fetchone()
@@ -2852,8 +2853,8 @@ if __name__ == "__main__":
                     sql_string += " AND message.starred = 1"
                     sql_count += " AND message.starred = 1"
                 if args.broadcast:
-                    sql_string += " AND jid.raw_string LIKE '%broadcast%'"
-                    sql_count += " AND jid.raw_string LIKE '%broadcast%'"
+                    sql_string += " AND key_remote_jid LIKE '%broadcast%'"
+                    sql_count += " AND key_remote_jid LIKE '%broadcast%'"
                 if args.report:
                     report_var = args.report
                     get_configs()
@@ -2923,7 +2924,7 @@ if __name__ == "__main__":
                 elif args.all:
                     get_configs()
 #                    sql_string_consult = "SELECT raw_string_jid FROM chat_view ORDER BY sort_timestamp DESC"
-                    sql_string_consult = "SELECT raw_string FROM jid ORDER BY _id ASC"
+                    sql_string_consult = "SELECT jid_global.raw_string as key_remote_jid FROM chat_view INNER JOIN jid jid_global ON jid_global._id = chat_view.jid_row_id ORDER BY sort_timestamp DESC"
                     sql_consult_chat = cursor.execute(sql_string_consult)
                     chats_live = []
                     for i in sql_consult_chat:
